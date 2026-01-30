@@ -79,7 +79,7 @@ else
 fi
 
 # 8. Create symlink: ComfyUI uses our virtual environment
-echo -e "${YELLOW}[8/10] Setting up ComfyUI virtual environment link...${NC}"
+echo -e "${YELLOW}[8/11] Setting up ComfyUI virtual environment link...${NC}"
 if [ -L "$COMFYUI_DIR/.venv" ]; then
     rm "$COMFYUI_DIR/.venv"
 fi
@@ -90,14 +90,23 @@ fi
 ln -s "$(pwd)/.venv" "$COMFYUI_DIR/.venv"
 echo -e "${GREEN}✓ Virtual environment link created${NC}"
 
-# 9. Create custom_nodes directory and link
-echo -e "${YELLOW}[9/10] Setting up custom node link...${NC}"
+# 9. Install ComfyUI dependencies
+echo -e "${YELLOW}[9/11] Installing ComfyUI dependencies...${NC}"
+if [ -f "$COMFYUI_DIR/requirements.txt" ]; then
+    uv pip install -r "$COMFYUI_DIR/requirements.txt"
+    echo -e "${GREEN}✓ ComfyUI dependencies installed${NC}"
+else
+    echo -e "${YELLOW}! ComfyUI requirements.txt not found, skipping${NC}"
+fi
+
+# 10. Create custom_nodes directory and link
+echo -e "${YELLOW}[10/11] Setting up custom node link...${NC}"
 mkdir -p "$COMFYUI_DIR/custom_nodes"
 bash scripts/link.sh
 echo -e "${GREEN}✓ Custom node link created${NC}"
 
-# 10. Verify installation
-echo -e "${YELLOW}[10/10] Verifying installation...${NC}"
+# 11. Verify installation
+echo -e "${YELLOW}[11/11] Verifying installation...${NC}"
 bash scripts/check_env.sh
 
 echo ""
