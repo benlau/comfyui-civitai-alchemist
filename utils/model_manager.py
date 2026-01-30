@@ -1,21 +1,37 @@
 """
-Model Manager (Template)
+Model Manager
 
-Manages ComfyUI model downloads and organization.
-Actual implementation is left as a TODO for future development.
+Manages ComfyUI model downloads and directory organization.
 """
 
+import re
 from pathlib import Path
 from typing import List, Optional
+
+import requests
+from tqdm import tqdm
 
 
 class ModelManager:
     """
-    Model manager for organizing ComfyUI models.
-
-    This is a template class showing the structure for model management.
-    Methods are placeholders and need to be implemented.
+    Model manager for organizing and downloading ComfyUI models.
     """
+
+    # Map various type names to ComfyUI model subdirectory names
+    TYPE_MAPPING = {
+        "checkpoint": "checkpoints",
+        "Checkpoint": "checkpoints",
+        "model": "checkpoints",
+        "lora": "loras",
+        "LORA": "loras",
+        "LoCon": "loras",
+        "vae": "vae",
+        "VAE": "vae",
+        "embedding": "embeddings",
+        "TextualInversion": "embeddings",
+        "controlnet": "controlnet",
+        "hypernetwork": "hypernetworks",
+    }
 
     def __init__(self, comfyui_path: Optional[str] = None):
         """
@@ -25,7 +41,6 @@ class ModelManager:
             comfyui_path: Path to ComfyUI root directory
         """
         if comfyui_path is None:
-            # Default: assume ComfyUI is in ../ComfyUI
             self.comfyui_path = Path(__file__).parent.parent.parent / "ComfyUI"
         else:
             self.comfyui_path = Path(comfyui_path)
@@ -37,34 +52,87 @@ class ModelManager:
         Get directory for specific model type.
 
         Args:
-            model_type: Model type (checkpoint, lora, vae, embedding)
+            model_type: Model type (checkpoint, lora, vae, embedding, etc.)
 
         Returns:
             Path to model directory
         """
-        type_mapping = {
-            "checkpoint": "checkpoints",
-            "lora": "loras",
-            "vae": "vae",
-            "embedding": "embeddings"
-        }
-
-        dir_name = type_mapping.get(model_type, model_type)
+        dir_name = self.TYPE_MAPPING.get(model_type, model_type)
         return self.models_path / dir_name
 
-    def download_file(self, url: str, destination: Path) -> Path:
+    def find_model(self, filename: str, model_type: str) -> Optional[Path]:
         """
-        Download file (TODO: Implement with progress bar).
+        Check if a model file already exists in the ComfyUI directory.
+
+        Searches recursively in the appropriate model subdirectory.
+
+        Args:
+            filename: Model filename to search for
+            model_type: Model type
+
+        Returns:
+            Path to existing file, or None if not found
+        """
+        model_dir = self.get_model_dir(model_type)
+        if not model_dir.exists():
+            return None
+
+        for f in model_dir.rglob(filename):
+            return f
+        return None
+
+    def download_file(
+        self,
+        url: str,
+        destination: Path,
+        api_key: Optional[str] = None,
+    ) -> Path:
+        """
+        Download a file with progress bar.
+
+        Handles redirects and Content-Disposition headers for filename detection.
 
         Args:
             url: Download URL
             destination: Target file path
+            api_key: Optional API key for authenticated downloads
 
         Returns:
-            Path to downloaded file
+            Path to the downloaded file
         """
-        # TODO: Implement file download with progress display
-        print(f"[ModelManager] TODO: Download {url} to {destination}")
+        headers = {}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        response = requests.get(url, headers=headers, stream=True, timeout=30,
+                                allow_redirects=True)
+        response.raise_for_status()
+
+        # Check Content-Disposition for actual filename
+        content_disp = response.headers.get("Content-Disposition", "")
+        if "filename=" in content_disp:
+            match = re.search(r'filename="?([^";\n]+)"?', content_disp)
+            if match:
+                actual_filename = match.group(1).strip()
+                destination = destination.parent / actual_filename
+
+        # Ensure target directory exists
+        destination.parent.mkdir(parents=True, exist_ok=True)
+
+        total_size = int(response.headers.get("Content-Length", 0))
+
+        with open(destination, "wb") as f:
+            with tqdm(
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                desc=destination.name,
+            ) as pbar:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        pbar.update(len(chunk))
+
         return destination
 
     def list_models(self, model_type: str) -> List[str]:
@@ -81,12 +149,9 @@ class ModelManager:
         if not model_dir.exists():
             return []
 
-        # Supported model file formats
         extensions = [".safetensors", ".ckpt", ".pt", ".pth"]
         models = []
-
         for ext in extensions:
-            models.extend(model_dir.glob(f"*{ext}"))
+            models.extend(model_dir.rglob(f"*{ext}"))
 
         return [m.name for m in models]
-
