@@ -69,6 +69,8 @@ def _extract_common_params(metadata: dict, resources: dict) -> dict:
     checkpoint_filename = None
     lora_resources = []
     upscaler_filename = None
+    vae_filename = None
+    embedding_resources = []
 
     for r in resource_list:
         if not r.get("resolved"):
@@ -79,6 +81,28 @@ def _extract_common_params(metadata: dict, resources: dict) -> dict:
             lora_resources.append(r)
         elif r["type"] == "upscaler" and r.get("filename"):
             upscaler_filename = r["filename"]
+        elif r["type"] == "vae" and r.get("filename"):
+            vae_filename = r["filename"]
+        elif r["type"] == "embedding" and r.get("filename"):
+            embedding_resources.append(r)
+
+    # Replace embedding references in prompts with ComfyUI embedding:name syntax
+    for emb in embedding_resources:
+        emb_name = emb["filename"].rsplit(".", 1)[0]  # e.g. "lazyneg.safetensors" -> "lazyneg"
+        replacement = f"embedding:{emb_name}"
+        # Try exact word-boundary match first
+        pattern = r"\b" + re.escape(emb_name) + r"\b"
+        if re.search(pattern, prompt_text, flags=re.IGNORECASE):
+            prompt_text = re.sub(pattern, replacement, prompt_text, flags=re.IGNORECASE)
+        else:
+            # Try with optional spaces between characters (handles "lazy pos" vs "lazypos")
+            fuzzy_pattern = r"\s?".join(re.escape(c) for c in emb_name)
+            prompt_text = re.sub(fuzzy_pattern, replacement, prompt_text, flags=re.IGNORECASE)
+        if re.search(pattern, negative_prompt, flags=re.IGNORECASE):
+            negative_prompt = re.sub(pattern, replacement, negative_prompt, flags=re.IGNORECASE)
+        else:
+            fuzzy_pattern = r"\s?".join(re.escape(c) for c in emb_name)
+            negative_prompt = re.sub(fuzzy_pattern, replacement, negative_prompt, flags=re.IGNORECASE)
 
     if not checkpoint_filename:
         model_name = metadata.get("model_name", "")
@@ -102,6 +126,7 @@ def _extract_common_params(metadata: dict, resources: dict) -> dict:
         "checkpoint_filename": checkpoint_filename,
         "lora_resources": lora_resources,
         "upscaler_filename": upscaler_filename,
+        "vae_filename": vae_filename,
         "clip_skip": clip_skip,
     }
 
@@ -123,7 +148,18 @@ def _build_common_nodes(workflow: dict, params: dict) -> tuple:
 
     model_source = ["1", 0]
     clip_source = ["1", 1]
-    vae_source = ["1", 2]
+
+    # Node 9: VAELoader (if custom VAE specified, otherwise use checkpoint's VAE)
+    if params.get("vae_filename"):
+        workflow["9"] = {
+            "class_type": "VAELoader",
+            "inputs": {
+                "vae_name": params["vae_filename"],
+            },
+        }
+        vae_source = ["9", 0]
+    else:
+        vae_source = ["1", 2]
 
     # Insert LoRA loaders (chained), starting at node 10
     lora_node_id = 10
