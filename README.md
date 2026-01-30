@@ -1,181 +1,119 @@
 # ComfyUI Civitai Alchemist
 
-ComfyUI custom node for browsing Civitai images, extracting metadata, auto-downloading models, and applying prompts.
+貼上 Civitai 圖片網址，自動取得生成參數、下載所需模型，並產生 ComfyUI workflow 來重現圖片。
 
-## Features
+## 功能
 
-- 📷 **Civitai Browser**: Browse and search Civitai images
-- 🔍 **Keyword Extractor**: Extract keywords and settings from images
-- ⬇️ **Model Downloader**: Automatically download required models
-- ✨ **Prompt Applier**: Apply extracted prompts to your workflow
+1. **取得 Metadata** — 從 Civitai 圖片頁面擷取 prompt、模型、LoRA、sampler 等生成參數
+2. **解析模型** — 透過 hash/名稱查找模型的下載連結
+3. **下載模型** — 自動下載 checkpoint、LoRA 等到 ComfyUI 對應目錄
+4. **產生 Workflow** — 生成 ComfyUI API 格式的 workflow JSON，可直接送入執行
 
-## Performance Optimization
+## 環境需求
 
-This project is optimized for **RTX 5090 (Blackwell architecture)** with:
-- **SageAttention**: 1.5-2x speed boost (primary acceleration)
-- **Flash Attention 2**: Optional, additional acceleration if compatible
-- **PyTorch 2.7+**: Blackwell architecture optimizations
-- **CUDA 12.8/13.0**: Full GPU compute capability support
+- Python 3.10-3.12
+- ComfyUI（已安裝在 `../ComfyUI`）
+- uv 套件管理器
 
-## Requirements
+## 快速開始
 
-- Python 3.10-3.12 (tested with 3.12)
-- NVIDIA GPU with CUDA 12.8+ (optimized for RTX 5090)
-- uv package manager
-- Git
-- Ubuntu on WSL2 (or native Linux)
-
-## Quick Start
-
-### 1. Initial Setup
-
-Run the setup script to install everything:
+### 1. 環境設定
 
 ```bash
 bash scripts/setup.sh
 ```
 
-This will:
-- Create a virtual environment
-- Install PyTorch 2.7+ with CUDA 12.8 support
-- Install SageAttention for acceleration
-- Optionally install Flash Attention
-- Download ComfyUI
-- Link this custom node to ComfyUI
-- Configure performance optimizations
-
-### 2. Start ComfyUI
+### 2. 設定 API Key
 
 ```bash
-bash scripts/run_comfyui.sh
+cp .env.example .env
+# 編輯 .env，填入你的 Civitai API key
 ```
 
-Open in your browser:
-- From Linux: `http://127.0.0.1:8188`
-- From Windows (WSL2): `http://localhost:8188`
+API key 可從 [Civitai 帳號設定](https://civitai.com/user/account) 取得。
 
-### 3. Find Your Nodes
+### 3. 一鍵重現圖片
 
-In ComfyUI:
-1. Right-click → Add Node → Civitai
-2. You'll see 4 nodes:
-   - Civitai Browser 📷
-   - Keyword Extractor 🔍
-   - Model Downloader ⬇️
-   - Prompt Applier ✨
+```bash
+# 完整 pipeline：取得 metadata → 解析模型 → 下載 → 產生 workflow
+.venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916
 
-## Development
+# 產生 workflow 後直接送到 ComfyUI 執行
+.venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916 --submit
 
-### Project Structure
+# 跳過下載（模型已存在時）
+.venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916 --skip-download
+```
+
+### 4. 逐步執行（方便除錯）
+
+每個步驟都會產生一個 JSON 檔案，可以獨立檢查：
+
+```bash
+# Step 1: 取得圖片 metadata
+.venv/bin/python -m pipeline.fetch_metadata https://civitai.com/images/116872916
+# 產出: output/metadata.json
+
+# Step 2: 解析模型下載資訊
+.venv/bin/python -m pipeline.resolve_models
+# 產出: output/resources.json
+
+# Step 3: 下載模型（先用 --dry-run 確認）
+.venv/bin/python -m pipeline.download_models --dry-run
+.venv/bin/python -m pipeline.download_models
+# 產出: 模型檔案下載到 ComfyUI/models/ 對應目錄
+
+# Step 4: 產生 workflow
+.venv/bin/python -m pipeline.generate_workflow
+# 產出: output/workflow.json
+
+# Step 4b: 產生並送入 ComfyUI 執行
+.venv/bin/python -m pipeline.generate_workflow --submit
+```
+
+## 專案結構
 
 ```
 comfyui-civitai-alchemist/
-├── nodes/              # Node implementations
-├── utils/              # Helper utilities
-├── scripts/            # Development scripts
-├── docs/               # Documentation
-└── __init__.py         # Node registration
+├── pipeline/                   # 主要 pipeline 腳本
+│   ├── fetch_metadata.py       # Step 1: URL → metadata.json
+│   ├── resolve_models.py       # Step 2: metadata → resources.json
+│   ├── download_models.py      # Step 3: 下載模型檔案
+│   ├── generate_workflow.py    # Step 4: 產生 workflow.json
+│   ├── sampler_map.py          # Civitai ↔ ComfyUI sampler 名稱對照
+│   └── reproduce.py            # 一鍵完整 pipeline
+├── utils/
+│   ├── civitai_api.py          # Civitai API client
+│   └── model_manager.py        # 模型下載與目錄管理
+├── scripts/                    # 環境設定腳本
+├── output/                     # Pipeline 輸出（gitignored）
+│   ├── metadata.json
+│   ├── resources.json
+│   └── workflow.json
+├── .env                        # 環境變數（gitignored）
+├── .env.example                # .env 範本
+└── pyproject.toml              # 專案依賴
 ```
 
-### Making Changes
+## 目前支援範圍
 
-1. Edit files in `nodes/` or `utils/`
-2. Restart ComfyUI: Ctrl+C and run `bash scripts/run_comfyui.sh` again
-3. Refresh browser (F5)
+- txt2img workflow（含 LoRA）
+- 標準節點：CheckpointLoaderSimple、KSampler、CLIPTextEncode、EmptyLatentImage、VAEDecode、SaveImage、LoraLoader
+- 使用 checkpoint 內建的 VAE
 
-### Useful Commands
+## 尚未支援
 
-```bash
-# Check environment health
-bash scripts/check_env.sh
+- img2img / inpainting
+- ControlNet
+- Hires fix / upscaling
+- 自訂 VAE
+- 非標準 ComfyUI 節點
 
-# Run performance benchmark
-bash scripts/benchmark.sh
+## 參考資料
 
-# Re-link to ComfyUI
-bash scripts/link.sh
-
-# Unlink from ComfyUI
-bash scripts/unlink.sh
-```
-
-## Performance Verification
-
-After setup, verify your performance optimizations:
-
-```bash
-# 1. Check environment
-bash scripts/check_env.sh
-
-# 2. Run benchmark
-bash scripts/benchmark.sh
-
-# 3. Check ComfyUI console output
-bash scripts/run_comfyui.sh
-# Look for "Using SageAttention" or "Using Flash Attention"
-```
-
-Expected performance improvements (vs. no optimization):
-- **SageAttention**: 1.5-2.0x inference speed
-- **torch.compile**: 1.2-1.3x additional boost
-- **Overall**: 2-2.5x total speedup
-
-## Troubleshooting
-
-### CUDA not available
-
-WSL2-specific checks:
-1. Check GPU passthrough: `nvidia-smi` (should show RTX 5090)
-2. Check PyTorch: `python -c "import torch; print(torch.cuda.is_available())"`
-3. If CUDA is unavailable, restart WSL: `wsl --shutdown` (in Windows PowerShell)
-
-### SageAttention not working
-
-```bash
-source .venv/bin/activate
-pip list | grep sageattention
-# If not found:
-uv pip install sageattention
-```
-
-### Custom nodes not appearing
-
-1. Check symlink: `ls -la ../ComfyUI/custom_nodes/`
-2. Check ComfyUI console for errors
-3. Verify `__init__.py` has correct NODE_CLASS_MAPPINGS
-4. Re-run setup: `bash scripts/setup.sh`
-
-### Performance not as expected
-
-1. Run benchmark: `bash scripts/benchmark.sh`
-2. Check GPU usage: `nvidia-smi -l 1` (should be near 100%)
-3. Verify attention backend in ComfyUI console
-4. Check environment variables: `source .env && echo $CUDA_MODULE_LOADING`
-
-## WSL2 Notes
-
-- Project files should be in WSL2 filesystem (`/home/...`), NOT `/mnt/c/`
-- Access ComfyUI from Windows: `http://localhost:8188`
-- Models can be stored in Windows and symlinked if needed
-- GPU passthrough requires Windows 11 or Windows 10 21H2+
-
-## Documentation
-
-- [Development Guide](docs/DEVELOPMENT.md) - Detailed development guide for Python beginners
 - [Civitai API Documentation](https://github.com/civitai/civitai/wiki/REST-API-Reference)
 - [ComfyUI Custom Nodes Guide](https://docs.comfy.org/development/core-concepts/custom-nodes)
-
-## Performance Resources
-
-- [PyTorch 2.7 Release Notes](https://pytorch.org/blog/pytorch-2-7/)
-- [SageAttention GitHub](https://github.com/thu-ml/SageAttention)
-- [Flash Attention GitHub](https://github.com/Dao-AILab/flash-attention)
-- [ComfyUI RTX 5090 Support](https://github.com/Comfy-Org/ComfyUI/discussions/6643)
 
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
