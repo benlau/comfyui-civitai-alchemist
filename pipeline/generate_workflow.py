@@ -13,6 +13,7 @@ Usage:
 import argparse
 import json
 import random
+import re
 import sys
 from pathlib import Path
 from urllib import request as urllib_request
@@ -49,6 +50,8 @@ def _extract_common_params(metadata: dict, resources: dict) -> dict:
         upscaler_filename, clip_skip.
     """
     prompt_text = metadata.get("prompt", "")
+    # Strip <lora:name:weight> tags — ComfyUI uses LoraLoader nodes instead
+    prompt_text = re.sub(r"\s*<lora:[^>]+>", "", prompt_text)
     negative_prompt = metadata.get("negative_prompt", "")
     steps = metadata.get("steps") or 20
     cfg_scale = metadata.get("cfg_scale") or 7.0

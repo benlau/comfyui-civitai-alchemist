@@ -78,17 +78,29 @@ def extract_metadata(image_data: dict) -> dict:
         width = image_data["width"]
         height = image_data["height"]
 
+    # Build a hash lookup from the hashes dict (e.g. "LORA:name" -> "hash")
+    hashes = meta.get("hashes", {})
+    lora_hash_map = {}
+    for key, value in hashes.items():
+        if key.startswith("LORA:"):
+            lora_name = key[len("LORA:"):]
+            lora_hash_map[lora_name] = value
+
     # Normalize resources: Civitai uses "model" type for checkpoints
     resources = []
     for r in meta.get("resources", []):
         resource_type = r.get("type", "unknown")
         if resource_type == "model":
             resource_type = "checkpoint"
+        resource_hash = r.get("hash")
+        # Fill in LoRA hash from hashes dict if not present in resource
+        if not resource_hash and resource_type == "lora":
+            resource_hash = lora_hash_map.get(r.get("name", ""))
         resources.append({
             "name": r.get("name", "unknown"),
             "type": resource_type,
             "weight": r.get("weight"),
-            "hash": r.get("hash"),
+            "hash": resource_hash,
         })
 
     # Fallback: if no resources from meta.resources, try civitaiResources from raw_meta
