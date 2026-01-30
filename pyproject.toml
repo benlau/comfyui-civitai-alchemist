@@ -1,0 +1,64 @@
+[project]
+name = "comfyui-civitai-alchemist"
+version = "0.1.0"
+description = "ComfyUI custom node for browsing Civitai images and auto-downloading models"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    # PyTorch 2.7+ with CUDA 12.8 (支援 RTX 5090)
+    "torch>=2.7.0",
+    "torchvision>=0.20.0",
+    "torchaudio>=2.7.0",
+    # 性能優化套件
+    "sageattention>=1.0.0",
+    "numpy==1.26.4",  # 避免相容性問題
+    "triton>=3.3.0",  # Blackwell 架構支援
+    # ComfyUI core dependencies
+    "torchsde",
+    "einops",
+    "transformers>=4.50.3",
+    "tokenizers>=0.13.3",
+    "sentencepiece",
+    "safetensors>=0.4.2",
+    "aiohttp>=3.11.8",
+    "yarl>=1.18.0",
+    "pyyaml",
+    "pillow",
+    "scipy",
+    "tqdm",
+    "psutil",
+    "alembic",
+    "sqlalchemy",
+    "av>=14.2.0",
+    # Custom node specific
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+]
+
+[project.optional-dependencies]
+# Flash Attention (可選,可能需要編譯)
+flash-attn = [
+    "flash-attn>=2.8.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128" },
+]
+torchvision = [
+    { index = "pytorch-cu128" },
+]
+torchaudio = [
+    { index = "pytorch-cu128" },
+]
+
+[tool.uv]
+python = "3.12"
