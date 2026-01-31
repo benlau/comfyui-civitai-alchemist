@@ -7,7 +7,7 @@
         v-model="inputValue"
         type="text"
         class="input-field"
-        placeholder="116872916"
+        placeholder="e.g. 116872916"
         :disabled="disabled || loading"
         @keydown.enter="submit"
       />
