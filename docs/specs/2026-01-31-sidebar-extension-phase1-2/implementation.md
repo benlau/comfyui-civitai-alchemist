@@ -8,7 +8,7 @@
 ## 任務概要
 
 - [x] 重構 pyproject.toml 與 Pipeline 相容性調整
-- [ ] 建立前端 Vue 3 專案與 Sidebar 框架
+- [x] 建立前端 Vue 3 專案與 Sidebar 框架
 - [ ] 實作後端 API Routes 與 Pipeline 重構
 - [ ] 實作前端 API Key 管理與 Image Input 元件
 - [ ] 實作前端 Generation Info 與 Model List 元件
@@ -94,7 +94,10 @@
 - 啟動 ComfyUI 後，左側 sidebar 可以看到 Civitai Alchemist 的 tab icon，點擊後展開空白面板（可用 Playwright MCP 連線至 ComfyUI 頁面自動化檢查）
 
 **實作備註**
-<!-- 執行過程中填寫重要的技術決策、障礙和需要傳遞的上下文 -->
+- **不可 import `app.js`**：研究文件中建議的 `import { api } from '../../../scripts/app.js'` 方式無法使用。ComfyUI 擴充套件的 JS 是在瀏覽器中執行，API 必須透過 `window.app` 全域物件存取（`window.app.api.fetchApi()`、`window.app.registerExtension()`、`window.app.extensionManager.registerSidebarTab()`）
+- **Vite library mode 需要 `define`**：Vite 在 library mode 下不會自動替換 `process.env.NODE_ENV`，必須在 `vite.config.ts` 中加入 `define: { 'process.env.NODE_ENV': JSON.stringify('production') }`，否則 Vue runtime 會在瀏覽器中因 `ReferenceError: process is not defined` 而失敗
+- **型別宣告**：使用 `declare global { interface Window { app: ComfyApp } }` 在 `comfyui.d.ts` 中宣告 ComfyUI 全域物件型別，搭配 `export {}` 使其成為 module。社群有 `@comfyorg/comfyui-frontend-types` npm 套件可用但本階段未引入
+- **PrimeVue dark mode**：使用 `darkModeSelector: '.dark-theme, :root.dark-theme'` 配合 ComfyUI 的深色主題
 
 ---
 
