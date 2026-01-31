@@ -29,10 +29,11 @@
         <span>{{ error }}</span>
       </div>
 
-      <!-- Placeholder for results (will be extended in next task) -->
-      <div v-if="!loading && !error && metadata" class="results-placeholder">
-        <p class="hint-text">Metadata loaded. Generation info and model list coming next.</p>
-      </div>
+      <!-- Results: generation info + model list -->
+      <template v-if="!loading && !error && metadata">
+        <GenerationInfo :metadata="metadata" />
+        <ModelList v-if="resources.length > 0" :resources="resources" />
+      </template>
 
       <!-- Empty state hint -->
       <p v-if="!loading && !error && !metadata && apiKeySet" class="hint-text">
@@ -48,6 +49,8 @@ import type { Metadata, Resource } from './types'
 import { getApiKey, parseImageId, fetchMetadata, resolveModels } from './composables/useCivitaiApi'
 import ApiKeyWarning from './components/ApiKeyWarning.vue'
 import ImageInput from './components/ImageInput.vue'
+import GenerationInfo from './components/GenerationInfo.vue'
+import ModelList from './components/ModelList.vue'
 
 const apiKeySet = ref(false)
 const loading = ref(false)
@@ -129,10 +132,6 @@ async function handleSubmit(input: string) {
   background: rgba(220, 38, 38, 0.1);
   border: 1px solid var(--p-red-500);
   color: var(--p-red-400);
-}
-
-.results-placeholder {
-  margin-top: 4px;
 }
 
 .spinner {

@@ -11,7 +11,7 @@
 - [x] 建立前端 Vue 3 專案與 Sidebar 框架
 - [x] 實作後端 API Routes 與 Pipeline 重構
 - [x] 實作前端 API Key 管理與 Image Input 元件
-- [ ] 實作前端 Generation Info 與 Model List 元件
+- [x] 實作前端 Generation Info 與 Model List 元件
 - [ ] 端對端整合測試與修正
 - [ ] 執行驗收測試
 - [ ] 更新專案文件
@@ -251,7 +251,7 @@
   - 摘要文字「Missing: X of Y」正確
 
 **實作備註**
-<!-- 執行過程中填寫重要的技術決策、障礙和需要傳遞的上下文 -->
+照預期開發
 
 ---
 
