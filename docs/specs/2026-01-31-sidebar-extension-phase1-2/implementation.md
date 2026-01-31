@@ -14,8 +14,8 @@
 - [x] 實作前端 Generation Info 與 Model List 元件
 - [x] UI 外觀改善（圖片預覽、Prompt accordion、參數排列、Model card）
 - [x] 端對端整合測試與修正
-- [ ] 執行驗收測試
-- [ ] 更新專案文件
+- [x] 執行驗收測試
+- [x] 更新專案文件
 
 ## 任務細節
 
@@ -348,7 +348,7 @@
 - `docs/specs/2026-01-31-sidebar-extension-phase1-2/acceptance-report.md` — 詳細的驗收測試執行報告（執行時生成）
 
 **實作備註**
-<!-- 執行過程中填寫 -->
+使用者自行驗收
 
 ---
 
@@ -373,7 +373,7 @@
 - `CLAUDE.md` — AI 助手的專案指引文件
 
 **實作備註**
-<!-- 執行過程中填寫 -->
+照預期開發
 
 ---
 

@@ -2,7 +2,19 @@
 
 Paste a Civitai image URL, automatically fetch generation parameters, download required models, and generate a ComfyUI workflow to reproduce the image.
 
+Works as both a **ComfyUI sidebar extension** and a **standalone CLI tool**.
+
 ## Features
+
+### ComfyUI Sidebar Extension
+
+- **Sidebar Tab** — Dedicated tab in ComfyUI's left sidebar for quick access
+- **API Key Management** — Configure your Civitai API key via ComfyUI's built-in Settings panel
+- **Image Lookup** — Enter an image ID or full Civitai URL to fetch generation metadata
+- **Generation Info** — View prompt, sampler, steps, CFG, seed, size, clip skip, and image preview
+- **Model Status** — See which models (checkpoint, LoRAs, VAE, embeddings, upscaler) are already downloaded and which are missing
+
+### CLI Pipeline
 
 1. **Fetch Metadata** — Extract prompt, model, LoRA, sampler, and other generation parameters from a Civitai image page
 2. **Resolve Models** — Look up model download URLs via hash/name
@@ -19,19 +31,40 @@ Paste a Civitai image URL, automatically fetch generation parameters, download r
 
 - Python 3.10–3.12
 - A working [ComfyUI](https://github.com/comfyanonymous/ComfyUI) installation
-- [uv](https://docs.astral.sh/uv/) package manager (recommended) or pip
-- A [Civitai API key](https://civitai.com/user/account) (free, required for downloading models)
+- A [Civitai API key](https://civitai.com/user/account) (free)
+- [Node.js](https://nodejs.org/) 18+ (only for building the frontend from source)
 
 ## Installation
 
+### As a ComfyUI Extension (Recommended)
+
+1. Clone or download into ComfyUI's `custom_nodes/` directory:
+
 ```bash
-# Clone the repository
-git clone https://github.com/user/comfyui-civitai-alchemist.git
+cd ComfyUI/custom_nodes
+git clone https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist.git
+```
+
+2. Build the frontend:
+
+```bash
+cd comfyui-civitai-alchemist/ui
+npm install
+npm run build
+```
+
+3. Start (or restart) ComfyUI. The Civitai Alchemist tab will appear in the left sidebar.
+
+4. Open ComfyUI Settings (`Ctrl + ,`) and enter your Civitai API key in the **Civitai API Key** field.
+
+### As a Standalone CLI Tool
+
+```bash
+git clone https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist.git
 cd comfyui-civitai-alchemist
 
-# Create virtual environment and install dependencies
-uv venv .venv
-uv pip install -e .
+# Install with CLI extras (tqdm for progress bars, dotenv for .env support)
+pip install -e ".[cli]"
 
 # Set up environment variables
 cp .env.example .env
@@ -40,11 +73,17 @@ cp .env.example .env
 
 ## Usage
 
-### One-shot (recommended)
+### ComfyUI Sidebar
+
+1. Click the Civitai Alchemist icon (⚡) in the left sidebar
+2. Enter a Civitai image ID (e.g. `116872916`) or full URL (e.g. `https://civitai.com/images/116872916`)
+3. Click **Go** (or press Enter) to fetch generation info
+4. View generation parameters and model availability
+
+### CLI: One-shot (recommended)
 
 ```bash
 # Full pipeline: fetch → resolve → download → generate workflow
-# (models-dir is read from MODELS_DIR in .env, or pass --models-dir)
 .venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916
 
 # Generate workflow and submit to running ComfyUI
@@ -54,7 +93,7 @@ cp .env.example .env
 .venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916 --skip-download
 ```
 
-### Step by step (for debugging)
+### CLI: Step by step (for debugging)
 
 Each step produces a JSON file you can inspect:
 
@@ -80,7 +119,7 @@ Each step produces a JSON file you can inspect:
 .venv/bin/python -m pipeline.generate_workflow --submit
 ```
 
-### Options
+### CLI Options
 
 | Option | Description |
 |--------|-------------|
@@ -91,37 +130,62 @@ Each step produces a JSON file you can inspect:
 | `--output-dir DIR` | Output directory for JSON files (default: `output`) |
 | `--api-key KEY` | Civitai API key (or set `CIVITAI_API_KEY` in `.env`) |
 
-### How it works with ComfyUI
-
-This tool is **independent** from ComfyUI — it does not need to be installed inside ComfyUI. It interacts with ComfyUI in two ways:
-
-1. **Model directory**: Downloads models directly into your ComfyUI `models/` subdirectories (checkpoints, loras, vae, embeddings, upscale_models)
-2. **HTTP API** (optional): When using `--submit`, sends the generated workflow to ComfyUI's API endpoint for execution
-
-You can also use the generated `output/workflow.json` manually — load it into ComfyUI's web interface or submit it via any API client.
-
 ## Project Structure
 
 ```
 comfyui-civitai-alchemist/
-├── pipeline/                   # Main pipeline scripts
+├── __init__.py                 # ComfyUI extension entry point
+├── civitai_routes.py           # Backend API routes (POST /civitai/fetch, /civitai/resolve)
+├── civitai_utils/              # Shared utilities
+│   ├── civitai_api.py          # Civitai REST API client (with retry/backoff)
+│   └── model_manager.py        # Model download & directory management
+├── pipeline/                   # CLI pipeline scripts
 │   ├── fetch_metadata.py       # Step 1: URL → metadata.json
 │   ├── resolve_models.py       # Step 2: metadata → resources.json
 │   ├── download_models.py      # Step 3: download model files
 │   ├── generate_workflow.py    # Step 4: generate workflow.json
 │   ├── sampler_map.py          # Civitai ↔ ComfyUI sampler name mapping
 │   └── reproduce.py            # One-shot runner (all steps)
-├── utils/
-│   ├── civitai_api.py          # Civitai API client
-│   └── model_manager.py        # Model download & directory management
-├── output/                     # Pipeline output (gitignored)
-│   ├── metadata.json
-│   ├── resources.json
-│   └── workflow.json
-├── .env                        # Environment variables (gitignored)
-├── .env.example                # .env template
-└── pyproject.toml              # Project dependencies
+├── ui/                         # Frontend source (Vue 3 + TypeScript)
+│   ├── src/
+│   │   ├── main.ts             # Extension entry: sidebar & settings registration
+│   │   ├── App.vue             # Root component with state management
+│   │   ├── components/         # UI components
+│   │   │   ├── ApiKeyWarning.vue
+│   │   │   ├── ImageInput.vue
+│   │   │   ├── GenerationInfo.vue
+│   │   │   ├── ModelList.vue
+│   │   │   └── ModelCard.vue
+│   │   ├── composables/
+│   │   │   └── useCivitaiApi.ts  # API client composable
+│   │   └── types/              # TypeScript type definitions
+│   ├── package.json
+│   └── vite.config.ts          # Vite library mode → ../js/
+├── js/                         # Built frontend output (gitignored)
+├── output/                     # CLI pipeline output (gitignored)
+├── scripts/                    # Environment setup scripts (Linux/WSL2)
+├── pyproject.toml              # Python project config
+└── LICENSE                     # MIT License
 ```
+
+## Frontend Development
+
+The frontend is a Vue 3 + TypeScript project built with Vite in library mode. The build output goes to `js/`, which ComfyUI loads automatically.
+
+```bash
+cd ui
+
+# Install dependencies
+npm install
+
+# Build for production (outputs to ../js/)
+npm run build
+
+# Watch mode for development
+npm run dev
+```
+
+After building, restart ComfyUI (or refresh the browser) to load the updated frontend.
 
 ## Development Setup
 
@@ -143,7 +207,7 @@ This will install PyTorch with CUDA support, clone ComfyUI, set up symlinks, and
 # 1. Create virtual environment and install core dependencies
 cd comfyui-civitai-alchemist
 uv venv .venv --python 3.12
-uv pip install -e .
+uv pip install -e ".[cli]"
 
 # 2. Install PyTorch with CUDA 13.0
 uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
@@ -156,18 +220,24 @@ cd comfyui-civitai-alchemist
 # 4. Install ComfyUI dependencies
 uv pip install -r ../ComfyUI/requirements.txt
 
-# 5. Set up environment variables
+# 5. Build the frontend
+cd ui
+npm install
+npm run build
+cd ..
+
+# 6. Set up environment variables (for CLI mode)
 copy .env.example .env
 # Edit .env — fill in your Civitai API key and models directory path
 
-# 6. Create directory junctions (Windows equivalent of symlinks)
+# 7. Create directory junctions (Windows equivalent of symlinks)
 # Share .venv with ComfyUI:
 New-Item -ItemType Junction -Path ..\ComfyUI\.venv -Target (Resolve-Path .venv)
 # Register as custom node:
 New-Item -ItemType Junction -Path ..\ComfyUI\custom_nodes\comfyui-civitai-alchemist -Target (Resolve-Path .)
 ```
 
-On Windows, run pipeline commands with:
+On Windows, run CLI pipeline commands with:
 
 ```powershell
 .venv\Scripts\python -m pipeline.reproduce https://civitai.com/images/116872916
@@ -177,6 +247,8 @@ See [CLAUDE.md](CLAUDE.md) for more development details.
 
 ## Not Yet Supported
 
+- Model downloading from sidebar (planned for phase 3)
+- Workflow generation from sidebar (planned for phase 4)
 - img2img / inpainting
 - ControlNet
 - Non-standard ComfyUI nodes

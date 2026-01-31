@@ -4,7 +4,10 @@ This file provides context for AI assistants (like Claude) working on this proje
 
 ## Project Overview
 
-**ComfyUI Civitai Alchemist** reproduces Civitai images locally via ComfyUI. Given a Civitai image URL, it fetches generation metadata, resolves and downloads required models, and generates a ComfyUI workflow.
+**ComfyUI Civitai Alchemist** reproduces Civitai images locally via ComfyUI. It works in two modes:
+
+1. **ComfyUI Sidebar Extension** — A sidebar tab in ComfyUI's UI for querying Civitai image metadata and checking model availability, without leaving the ComfyUI interface.
+2. **CLI Pipeline** — A standalone 4-step pipeline that fetches metadata, resolves models, downloads them, and generates a ComfyUI workflow.
 
 ## Environment Information
 
@@ -86,19 +89,38 @@ Generated images from ComfyUI go to `../ComfyUI/output/`.
 
 ```
 comfyui-civitai-alchemist/
-├── __init__.py                 # ComfyUI node registration (empty)
-├── pipeline/                   # Main pipeline scripts
+├── __init__.py                 # ComfyUI extension entry point (WEB_DIRECTORY, route registration)
+├── civitai_routes.py           # Backend API routes (POST /civitai/fetch, /civitai/resolve)
+├── civitai_utils/              # Shared utilities (renamed from utils/ to avoid ComfyUI conflict)
+│   ├── civitai_api.py          # Civitai REST API client (with retry/backoff)
+│   └── model_manager.py        # Model download & directory management
+├── pipeline/                   # CLI pipeline scripts
 │   ├── fetch_metadata.py       # Step 1: URL → metadata.json
 │   ├── resolve_models.py       # Step 2: metadata → resources.json
 │   ├── download_models.py      # Step 3: download model files
 │   ├── generate_workflow.py    # Step 4: generate workflow.json
 │   ├── sampler_map.py          # Civitai ↔ ComfyUI sampler name mapping
 │   └── reproduce.py            # One-shot runner (all steps)
-├── utils/
-│   ├── civitai_api.py          # Civitai REST API client (with retry/backoff)
-│   └── model_manager.py        # Model download & directory management
+├── ui/                         # Frontend source (Vue 3 + TypeScript + PrimeVue)
+│   ├── src/
+│   │   ├── main.ts             # Extension entry: sidebar tab & settings registration
+│   │   ├── App.vue             # Root component with state management
+│   │   ├── components/         # UI components
+│   │   │   ├── ApiKeyWarning.vue   # API key not configured warning
+│   │   │   ├── ImageInput.vue      # Image ID/URL input + Go button
+│   │   │   ├── GenerationInfo.vue  # Generation parameters display
+│   │   │   ├── ModelList.vue       # Model list container with summary
+│   │   │   └── ModelCard.vue       # Individual model status card
+│   │   ├── composables/
+│   │   │   └── useCivitaiApi.ts    # API client composable (fetchMetadata, resolveModels)
+│   │   └── types/
+│   │       ├── index.ts            # TypeScript type definitions (Metadata, Resource, etc.)
+│   │       └── comfyui.d.ts        # ComfyUI global type declarations (window.app)
+│   ├── package.json
+│   └── vite.config.ts          # Vite library mode config → ../js/
+├── js/                         # Built frontend output (gitignored)
 ├── nodes/                      # ComfyUI custom nodes (currently unused)
-├── scripts/                    # Environment setup scripts
+├── scripts/                    # Environment setup scripts (Linux/WSL2)
 │   ├── setup.sh                # One-click environment setup
 │   ├── run_comfyui.sh          # Start ComfyUI
 │   ├── check_env.sh            # Environment health check
@@ -106,20 +128,53 @@ comfyui-civitai-alchemist/
 │   └── link.sh / unlink.sh    # Symlink management
 ├── .env                        # Environment variables (gitignored)
 ├── .env.example                # Template for .env
-├── pyproject.toml              # Project dependencies
+├── pyproject.toml              # Project config (ComfyUI Registry compatible)
 └── README.md                   # User documentation
 ```
 
 ## Key Implementation Details
 
-### Civitai API (`utils/civitai_api.py`)
+### ComfyUI Extension Entry (`__init__.py`)
+
+- `WEB_DIRECTORY = "./js"` — tells ComfyUI to load built frontend JS
+- `from . import civitai_routes` — triggers route registration via decorators at import time
+- No custom nodes registered (`NODE_CLASS_MAPPINGS = {}`)
+
+### Backend API Routes (`civitai_routes.py`)
+
+- `POST /civitai/fetch` — accepts `{ image_id, api_key }`, returns metadata JSON
+- `POST /civitai/resolve` — accepts `{ metadata, api_key }`, returns resources list with `exists` status
+- Routes registered via `@server.PromptServer.instance.routes.post()` decorators (standard ComfyUI pattern)
+- Uses `FolderPathsModelAdapter` to check model existence via ComfyUI's `folder_paths` API (respects `extra_model_paths.yaml` config)
+- `civitai_utils/` was renamed from `utils/` to avoid collision with ComfyUI's own `utils` package in `sys.modules`
+
+### Frontend Architecture (`ui/`)
+
+- **Framework**: Vue 3 + TypeScript + PrimeVue, built with Vite in library mode
+- **Entry point** (`main.ts`): Registers sidebar tab and API key setting via `window.app.registerExtension()` and `window.app.extensionManager.registerSidebarTab()`
+- **API communication**: Uses `window.app.api.fetchApi()` (ComfyUI's built-in fetch wrapper); API key read from ComfyUI Settings via `window.app.extensionManager.setting.get()`
+- **CSS strategy**: Uses ComfyUI's native CSS variables (`--fg-color`, `--descrip-text`, `--border-color`, `--comfy-input-bg`), NOT PrimeVue tokens (which don't switch with ComfyUI's dark theme)
+- **CSS injection**: `vite-plugin-css-injected-by-js` injects CSS via JS at runtime (ComfyUI only loads `main.js`, not separate CSS files)
+- **Build output**: `js/main.js` (single ES module), loaded by ComfyUI via `WEB_DIRECTORY`
+
+### Frontend Build
+
+```bash
+cd ui
+npm install        # Install dependencies
+npm run build      # Build to ../js/
+npm run dev        # Watch mode for development
+```
+
+### Civitai API (`civitai_utils/civitai_api.py`)
 
 - `get_image_metadata(image_id)` — `GET /api/v1/images?imageId={id}`, returns first item
 - `get_model_version_by_hash(hash)` — `GET /api/v1/model-versions/by-hash/{hash}`
 - `search_models(query, limit)` — `GET /api/v1/models?query={query}&limit={limit}`
+- `CivitaiAPI(api_key=...)` — constructor accepts explicit API key (used by sidebar routes)
 - Retry logic: 3 retries with exponential backoff (1s, 2s, 4s)
 - Rate limit handling: respects 429 Retry-After header
-- API key loaded from `CIVITAI_API_KEY` env var (via dotenv)
+- In CLI mode, API key loaded from `CIVITAI_API_KEY` env var (via dotenv)
 
 ### Metadata Structure
 
@@ -145,15 +200,24 @@ Generates ComfyUI API-format workflow (JSON DAG):
 - Embeddings: embedding filenames from resources are converted to `embedding:name` syntax in prompts (with fuzzy matching for names with optional spaces, e.g. "lazy pos" → "embedding:lazypos")
 - SaveImage prefix: `civitai_{image_id}`
 
-### Model Manager (`utils/model_manager.py`)
+### Model Manager (`civitai_utils/model_manager.py`)
 
 - `ModelManager(models_dir=)` accepts a models directory path; falls back to `MODELS_DIR` env var, then `../ComfyUI/models`
 - `TYPE_MAPPING` maps Civitai type names to ComfyUI subdirectories
 - `find_model()` searches recursively with `rglob`
-- `download_file()` streams with tqdm progress, handles Content-Disposition
+- `download_file()` streams with tqdm progress (optional; tqdm is try/except imported), handles Content-Disposition
+- In extension mode, `FolderPathsModelAdapter` (in `civitai_routes.py`) replaces `ModelManager.find_model()` with ComfyUI's `folder_paths.get_full_path()`
 
 ## Supported Scope
 
+### Sidebar Extension (Phase 1–2)
+- Sidebar tab registration in ComfyUI UI
+- API key management via ComfyUI Settings
+- Image metadata query (by ID or full Civitai URL)
+- Generation parameter display (prompt, sampler, steps, CFG, seed, size, clip skip, image preview)
+- Model status checking (checkpoint, LoRA, VAE, embedding, upscaler) with local existence detection via `folder_paths`
+
+### CLI Pipeline
 - **txt2img** workflows with optional LoRA(s)
 - **txt2img-hires** workflows (two-pass generation with upscaler model)
 - CLIP skip support via CLIPSetLastLayer
@@ -164,6 +228,8 @@ Generates ComfyUI API-format workflow (JSON DAG):
 
 ## Not Yet Supported
 
+- Model downloading from sidebar (planned for phase 3)
+- Workflow generation from sidebar (planned for phase 4)
 - img2img / inpainting
 - ControlNet
 - Non-standard ComfyUI nodes
@@ -183,8 +249,9 @@ Images verified to work through the full pipeline (fetch → resolve → generat
 - **Conversation Language**: Use **Traditional Chinese (繁體中文)** when communicating with the user in Claude Code
 - **Code Language**: All code, comments, docstrings, commit messages, and documentation files (including README, CLAUDE.md) must be in **English**
 - **Docstrings**: Google-style with type hints
-- **Dependencies**: Use dotenv for environment variables; all pipeline scripts call `load_dotenv()` in `main()`
-- **pyproject.toml**: Core dependencies (requests, tqdm, python-dotenv) are in `[project.dependencies]`. PyTorch and ComfyUI-related dependencies are in `[project.optional-dependencies.dev]`. End users only need the core dependencies.
+- **Dependencies**: `tqdm` and `python-dotenv` are optional (try/except imported); only `requests` is a hard dependency
+- **pyproject.toml**: `[project.dependencies]` has only `requests>=2.31.0`. `tqdm` and `python-dotenv` are in `[project.optional-dependencies].cli` for CLI users. `[tool.comfy]` section configured for ComfyUI Registry.
+- **Frontend CSS**: Use ComfyUI native CSS variables (`--fg-color`, `--descrip-text`, `--border-color`, `--comfy-input-bg`), NOT PrimeVue tokens (`--p-text-color`, etc.) which don't switch with ComfyUI's dark/light theme
 
 ## Environment Setup
 
@@ -206,7 +273,7 @@ bash scripts/run_comfyui.sh
 ```powershell
 # 1. Create virtual environment and install core dependencies
 uv venv .venv --python 3.12
-uv pip install -e .
+uv pip install -e ".[cli]"
 
 # 2. Install PyTorch with CUDA 13.0
 uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
@@ -219,17 +286,23 @@ cd comfyui-civitai-alchemist
 # 4. Install ComfyUI dependencies
 uv pip install -r ../ComfyUI/requirements.txt
 
-# 5. Set up .env
+# 5. Build the frontend
+cd ui
+npm install
+npm run build
+cd ..
+
+# 6. Set up .env (for CLI mode)
 copy .env.example .env
 # Edit .env with your Civitai API key and models directory path
 
-# 6. Create directory junctions (Windows equivalent of symlinks)
+# 7. Create directory junctions (Windows equivalent of symlinks)
 # Share .venv with ComfyUI:
 powershell -Command "New-Item -ItemType Junction -Path ..\ComfyUI\.venv -Target (Resolve-Path .venv)"
 # Register as custom node:
 powershell -Command "New-Item -ItemType Junction -Path ..\ComfyUI\custom_nodes\comfyui-civitai-alchemist -Target (Resolve-Path .)"
 
-# 7. Start ComfyUI
+# 8. Start ComfyUI
 .venv\Scripts\python -s ..\ComfyUI\main.py
 ```
 
@@ -247,3 +320,6 @@ On Windows, use `.venv\Scripts\python` instead of `.venv/bin/python` for all pip
 
 - [Civitai API Documentation](https://github.com/civitai/civitai/wiki/REST-API-Reference)
 - [ComfyUI Custom Nodes Guide](https://docs.comfy.org/development/core-concepts/custom-nodes)
+- [ComfyUI Sidebar Tabs API](https://docs.comfy.org/custom-nodes/js/javascript_sidebar_tabs)
+- [ComfyUI Extension Settings API](https://docs.comfy.org/custom-nodes/js/javascript_settings)
+- [ComfyUI Registry pyproject.toml Spec](https://docs.comfy.org/registry/specifications)
