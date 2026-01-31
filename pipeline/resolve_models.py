@@ -179,6 +179,16 @@ def _fill_from_version_data(
             result["already_downloaded"] = True
             result["target_path"] = str(existing)
 
+    # Fill in name if still unknown (e.g. civitaiResources with no modelName)
+    if result.get("name") in (None, "", "unknown"):
+        model_info = version_data.get("model", {})
+        model_name = model_info.get("name", "")
+        if model_name:
+            result["name"] = model_name
+        elif result.get("filename"):
+            # Use filename without extension as fallback
+            result["name"] = Path(result["filename"]).stem
+
     result["resolved"] = True
     return result
 

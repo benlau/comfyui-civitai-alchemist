@@ -142,6 +142,12 @@ async def handle_fetch_metadata(request):
                 {"error": "Invalid API key"},
                 status=401,
             )
+        # Civitai may return 500 for non-existent large IDs
+        if "500" in error_msg:
+            return web.json_response(
+                {"error": "Image not found"},
+                status=404,
+            )
         return web.json_response(
             {"error": f"Failed to fetch from Civitai API: {error_msg}"},
             status=502,

@@ -13,7 +13,7 @@
 - [x] 實作前端 API Key 管理與 Image Input 元件
 - [x] 實作前端 Generation Info 與 Model List 元件
 - [x] UI 外觀改善（圖片預覽、Prompt accordion、參數排列、Model card）
-- [ ] 端對端整合測試與修正
+- [x] 端對端整合測試與修正
 - [ ] 執行驗收測試
 - [ ] 更新專案文件
 
@@ -328,7 +328,10 @@
 - UI 狀態切換流暢無異常（可用 Playwright MCP 檢查）
 
 **實作備註**
-<!-- 執行過程中填寫重要的技術決策、障礙和需要傳遞的上下文 -->
+- [Bug 修正] `resolve_resource()` 透過 `version_id` 解析的 model 名稱全部顯示 `"unknown"`。原因是 `civitaiResources` 的原始資料沒有 `modelName` 欄位（只有 `modelVersionId`），而 `_fill_from_version_data()` 從未更新 `name`。修正方式：在 `_fill_from_version_data()` 末尾加入 name fallback 邏輯（優先用 `version_data.model.name`，其次用 `filename` 去掉副檔名）。前端 `ModelCard.vue` 也加入 `displayName` computed 作為雙重保險。
+- [Bug 修正] Embedding 的檔案大小顯示過多小數位（如 `336.1484375 KB`），修正 `formattedSize` 中 KB 格式化為 `toFixed(1)`。
+- [Bug 修正] 輸入超大不存在的 image ID（如 `99999999999`）時，Civitai API 回傳 HTTP 500 而非 404，後端直接轉發了技術性錯誤訊息。修正 `civitai_routes.py` 增加 500 → "Image not found" 的映射。
+- [驗證結果] 使用 Playwright 自動化測試通過所有場景：三個測試 image ID（116872916、118577644、119258762）、URL 格式輸入、Enter 觸發、無效格式、無效 ID、API key 未設定狀態、查詢結果切換。
 
 ---
 

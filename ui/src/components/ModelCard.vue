@@ -2,7 +2,7 @@
   <div class="model-card" :class="{ 'model-missing': !resource.already_downloaded }">
     <div class="card-header">
       <span class="model-status">{{ resource.already_downloaded ? '✅' : '❌' }}</span>
-      <span class="model-name" :title="resource.name">{{ resource.name }}</span>
+      <span class="model-name" :title="displayName">{{ displayName }}</span>
       <span class="model-meta">
         <span class="model-type-tag">{{ resource.type }}</span>
         <template v-if="formattedSize">
@@ -28,12 +28,21 @@ const props = defineProps<{
   resource: Resource
 }>()
 
+const displayName = computed(() => {
+  const name = props.resource.name
+  if (name && name !== 'unknown') return name
+  // Fallback: use filename without extension
+  const fn = props.resource.filename
+  if (fn) return fn.replace(/\.[^.]+$/, '')
+  return 'unknown'
+})
+
 const formattedSize = computed(() => {
   const kb = props.resource.size_kb
   if (kb == null) return ''
   if (kb >= 1024 * 1024) return `${(kb / (1024 * 1024)).toFixed(1)} GB`
   if (kb >= 1024) return `${(kb / 1024).toFixed(1)} MB`
-  return `${kb} KB`
+  return `${kb.toFixed(1)} KB`
 })
 
 const shortenedPath = computed(() => {
