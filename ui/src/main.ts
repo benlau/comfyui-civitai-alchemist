@@ -1,7 +1,9 @@
-import { createApp } from 'vue'
+import { createApp, type App as VueApp } from 'vue'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 import App from './App.vue'
+
+let vueApp: VueApp | null = null
 
 async function init() {
   // Wait for ComfyUI app to be available
@@ -33,9 +35,16 @@ async function init() {
     tooltip: 'Reproduce Civitai images',
     type: 'custom',
     render: (el: HTMLElement) => {
+      // Prevent duplicate Vue app instances when render is called multiple times
+      if (vueApp) {
+        vueApp.unmount()
+        vueApp = null
+      }
+      el.innerHTML = ''
+
       const container = document.createElement('div')
       el.appendChild(container)
-      const vueApp = createApp(App)
+      vueApp = createApp(App)
       vueApp.use(PrimeVue, {
         theme: {
           preset: Aura,

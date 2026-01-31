@@ -10,7 +10,7 @@
 - [x] 重構 pyproject.toml 與 Pipeline 相容性調整
 - [x] 建立前端 Vue 3 專案與 Sidebar 框架
 - [x] 實作後端 API Routes 與 Pipeline 重構
-- [ ] 實作前端 API Key 管理與 Image Input 元件
+- [x] 實作前端 API Key 管理與 Image Input 元件
 - [ ] 實作前端 Generation Info 與 Model List 元件
 - [ ] 端對端整合測試與修正
 - [ ] 執行驗收測試
@@ -201,7 +201,16 @@
 - 輸入 image ID 後點擊 Go，可以看到載入中狀態（可用 Playwright MCP 檢查）
 
 **實作備註**
-<!-- 執行過程中填寫重要的技術決策、障礙和需要傳遞的上下文 -->
+- [技術障礙] ComfyUI 的 sidebar `render` callback 會被多次呼叫（切換 tab 時），導致出現多個重複的 Vue app 實例。解決方式是在 `main.ts` 中用模組層級變數追蹤 Vue app 實例，每次 render 前先 unmount 前一個並清空 `el.innerHTML`。
+- [技術決策] 未使用 PrimeVue 的 InputText/Button 元件，改用原生 HTML + CSS 自訂樣式。原因是 sidebar 面板空間有限，PrimeVue 元件預設 padding 太大，且原生元件可以更精確控制尺寸和風格以匹配 ComfyUI 的深色主題。
+- [技術決策] 更新了 `types/index.ts` 的型別定義以完全匹配後端 `resolve_resource()` 回傳的欄位（如 `already_downloaded`、`size_kb`、`target_dir`、`resolve_method` 等），新增 `ResolveResponse` interface。
+- [後續依賴] `App.vue` 中已預留 `metadata` 和 `resources` reactive state，下一個任務的 GenerationInfo 和 ModelList 元件可以直接從 App.vue 接收這些 props。
+- [樣式重構] 將自訂 CSS 改為使用 ComfyUI 的 Tailwind classes 和 CSS 變數 token，確保亮色/深色主題自動切換且 padding 與內建面板對齊。主要變更：
+  - `App.vue` 外層容器改用 `comfy-vue-side-bar-container flex h-full flex-col`，標題和輸入區用 `comfy-vue-side-bar-header`，內容區用 `comfy-vue-side-bar-body`
+  - 水平 padding 統一用 `px-2 2xl:px-4`（與 Node Library 等內建面板一致）
+  - 背景色改用 `--comfy-input-bg`、`--comfy-menu-secondary-bg`，邊框改用 `--p-content-border-color`，文字色改用 `--p-text-color`、`--p-text-muted-color`
+  - 移除所有 CSS 變數的 fallback 值（不再需要，因為由 ComfyUI 主頁面提供）
+  - 參考來源：`../ComfyUI_frontend/src/components/sidebar/tabs/SidebarTabTemplate.vue`（基礎模板）、`NodeLibrarySidebarTab.vue`（範例實作）
 
 ---
 
