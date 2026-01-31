@@ -3,13 +3,16 @@
     <div class="card-header">
       <span class="model-status">{{ resource.already_downloaded ? '✅' : '❌' }}</span>
       <span class="model-name" :title="resource.name">{{ resource.name }}</span>
-    </div>
-    <div class="card-details">
-      <span class="model-type-tag">{{ resource.type }}</span>
-      <span v-if="formattedSize" class="model-size">{{ formattedSize }}</span>
+      <span class="model-meta">
+        <span class="model-type-tag">{{ resource.type }}</span>
+        <template v-if="formattedSize">
+          <span class="meta-sep">·</span>
+          <span class="model-size">{{ formattedSize }}</span>
+        </template>
+      </span>
     </div>
     <div v-if="resource.already_downloaded && resource.target_path" class="card-path" :title="resource.target_path">
-      Found in: {{ resource.target_path }}
+      {{ shortenedPath }}
     </div>
     <div v-if="!resource.resolved && resource.error" class="card-error">
       {{ resource.error }}
@@ -32,13 +35,25 @@ const formattedSize = computed(() => {
   if (kb >= 1024) return `${(kb / 1024).toFixed(1)} MB`
   return `${kb} KB`
 })
+
+const shortenedPath = computed(() => {
+  const p = props.resource.target_path
+  if (!p) return ''
+  // Show path relative to models/ directory
+  const modelsIdx = p.replace(/\\/g, '/').indexOf('/models/')
+  if (modelsIdx !== -1) {
+    return p.replace(/\\/g, '/').slice(modelsIdx + 1)
+  }
+  // Fallback: show just the filename
+  return p.replace(/\\/g, '/').split('/').pop() || p
+})
 </script>
 
 <style scoped>
 .model-card {
   padding: 8px 10px;
   background: var(--comfy-input-bg);
-  border: 1px solid var(--p-content-border-color);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
@@ -51,7 +66,7 @@ const formattedSize = computed(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
+  min-width: 0;
 }
 
 .model-status {
@@ -62,17 +77,19 @@ const formattedSize = computed(() => {
 .model-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--p-text-color);
+  color: var(--fg-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
-.card-details {
+.model-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .model-type-tag {
@@ -81,19 +98,26 @@ const formattedSize = computed(() => {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--p-primary-400);
+  color: var(--p-primary-500);
   background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);
   border-radius: 3px;
+  white-space: nowrap;
+}
+
+.meta-sep {
+  color: var(--descrip-text);
+  font-size: 11px;
 }
 
 .model-size {
   font-size: 11px;
-  color: var(--p-text-muted-color);
+  color: var(--descrip-text);
+  white-space: nowrap;
 }
 
 .card-path {
   font-size: 10px;
-  color: var(--p-text-muted-color);
+  color: var(--descrip-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -102,7 +126,7 @@ const formattedSize = computed(() => {
 
 .card-error {
   font-size: 10px;
-  color: var(--p-red-400);
+  color: var(--error-text);
   margin-top: 4px;
 }
 </style>

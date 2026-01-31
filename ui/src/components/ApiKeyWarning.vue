@@ -44,7 +44,7 @@ function openSettings() {
 .warning-text {
   margin: 0 0 10px 0;
   font-size: 12px;
-  color: var(--p-text-muted-color);
+  color: var(--descrip-text);
   line-height: 1.4;
 }
 
@@ -54,15 +54,15 @@ function openSettings() {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--p-text-color);
+  color: var(--fg-color);
   background: var(--comfy-menu-secondary-bg);
-  border: 1px solid var(--p-content-border-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .open-settings-btn:hover {
-  background: var(--p-content-border-color);
+  background: var(--border-color);
 }
 </style>

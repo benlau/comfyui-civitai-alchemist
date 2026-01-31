@@ -2,9 +2,8 @@
   <div class="model-list">
     <div class="section-header">
       <h3 class="section-title">Models</h3>
-      <span class="summary-text" :class="{ 'has-missing': missingCount > 0 }">
-        Missing: {{ missingCount }} of {{ resources.length }}
-      </span>
+      <span v-if="missingCount === 0" class="summary-text all-found">All found</span>
+      <span v-else class="summary-text has-missing">Missing: {{ missingCount }} of {{ resources.length }}</span>
     </div>
     <div class="cards">
       <ModelCard
@@ -45,7 +44,7 @@ const missingCount = computed(() =>
 .section-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--p-text-color);
+  color: var(--fg-color);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -53,11 +52,15 @@ const missingCount = computed(() =>
 
 .summary-text {
   font-size: 11px;
-  color: var(--p-text-muted-color);
+}
+
+.summary-text.all-found {
+  color: var(--p-green-600);
+  font-weight: 600;
 }
 
 .summary-text.has-missing {
-  color: var(--p-red-400);
+  color: var(--error-text);
   font-weight: 600;
 }
 

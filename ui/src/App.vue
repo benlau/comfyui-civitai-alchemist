@@ -17,7 +17,7 @@
     </div>
 
     <!-- Body: scrollable content area -->
-    <div class="comfy-vue-side-bar-body flex-1 overflow-y-auto px-2 2xl:px-4">
+    <div class="comfy-vue-side-bar-body flex-1 overflow-y-auto overflow-x-hidden px-2 2xl:px-4">
       <!-- Loading state -->
       <div v-if="loading" class="status-box loading-box">
         <div class="spinner"></div>
@@ -29,8 +29,13 @@
         <span>{{ error }}</span>
       </div>
 
-      <!-- Results: generation info + model list -->
+      <!-- Results: image preview + generation info + model list -->
       <template v-if="!loading && !error && metadata">
+        <!-- Image preview -->
+        <div v-if="metadata.image_url" class="image-preview">
+          <img :src="metadata.image_url" alt="Civitai image preview" />
+        </div>
+
         <GenerationInfo :metadata="metadata" />
         <ModelList v-if="resources.length > 0" :resources="resources" />
       </template>
@@ -105,8 +110,25 @@ async function handleSubmit(input: string) {
 </script>
 
 <style scoped>
+.image-preview {
+  margin-bottom: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  max-height: 180px;
+  background: var(--comfy-input-bg);
+}
+
+.image-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 180px;
+  object-fit: contain;
+}
+
 .hint-text {
-  color: var(--p-text-muted-color);
+  color: var(--descrip-text);
   font-size: 12px;
   margin: 0;
   line-height: 1.4;
@@ -124,20 +146,20 @@ async function handleSubmit(input: string) {
 
 .loading-box {
   background: var(--comfy-input-bg);
-  border: 1px solid var(--p-content-border-color);
-  color: var(--p-text-muted-color);
+  border: 1px solid var(--border-color);
+  color: var(--descrip-text);
 }
 
 .error-box {
   background: rgba(220, 38, 38, 0.1);
-  border: 1px solid var(--p-red-500);
-  color: var(--p-red-400);
+  border: 1px solid var(--error-text);
+  color: var(--error-text);
 }
 
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid var(--p-content-border-color);
+  border: 2px solid var(--border-color);
   border-top-color: var(--p-primary-500);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;

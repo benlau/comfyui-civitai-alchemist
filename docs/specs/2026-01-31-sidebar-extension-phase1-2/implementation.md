@@ -12,6 +12,7 @@
 - [x] 實作後端 API Routes 與 Pipeline 重構
 - [x] 實作前端 API Key 管理與 Image Input 元件
 - [x] 實作前端 Generation Info 與 Model List 元件
+- [x] UI 外觀改善（圖片預覽、Prompt accordion、參數排列、Model card）
 - [ ] 端對端整合測試與修正
 - [ ] 執行驗收測試
 - [ ] 更新專案文件
@@ -208,7 +209,7 @@
 - [樣式重構] 將自訂 CSS 改為使用 ComfyUI 的 Tailwind classes 和 CSS 變數 token，確保亮色/深色主題自動切換且 padding 與內建面板對齊。主要變更：
   - `App.vue` 外層容器改用 `comfy-vue-side-bar-container flex h-full flex-col`，標題和輸入區用 `comfy-vue-side-bar-header`，內容區用 `comfy-vue-side-bar-body`
   - 水平 padding 統一用 `px-2 2xl:px-4`（與 Node Library 等內建面板一致）
-  - 背景色改用 `--comfy-input-bg`、`--comfy-menu-secondary-bg`，邊框改用 `--p-content-border-color`，文字色改用 `--p-text-color`、`--p-text-muted-color`
+  - 背景色改用 `--comfy-input-bg`、`--comfy-menu-secondary-bg`，邊框改用 `--border-color`，文字色改用 `--fg-color`、`--descrip-text`（注意：不使用 PrimeVue 的 `--p-text-color`/`--p-content-border-color`，因為 ComfyUI 深色主題不切換這些值，詳見任務 6 實作備註）
   - 移除所有 CSS 變數的 fallback 值（不再需要，因為由 ComfyUI 主頁面提供）
   - 參考來源：`../ComfyUI_frontend/src/components/sidebar/tabs/SidebarTabTemplate.vue`（基礎模板）、`NodeLibrarySidebarTab.vue`（範例實作）
 
@@ -252,6 +253,55 @@
 
 **實作備註**
 照預期開發
+
+---
+
+### UI 外觀改善（圖片預覽、Prompt accordion、參數排列、Model card）
+
+**實作要點**
+- 新增圖片預覽區域：
+  - 在 Generation Info 上方顯示 Civitai 原圖縮圖
+  - 使用 metadata 中已有的 `image_url`（Civitai CDN）
+  - 限制高度（約 150-180px），寬度 100%，`object-fit: contain`
+  - 讓使用者確認找到正確的圖片
+- 改善 Prompt collapsible 群組感：
+  - 把 toggle header 和展開內容包在同一個有邊框的容器裡（accordion panel 風格）
+  - toggle 作為容器頂部 header，body 在同一邊框內展開
+  - 消除目前 toggle 按鈕和展開內容分離的問題
+- 修正參數列排列：
+  - 回到兩欄 grid 排列（`grid-template-columns: auto 1fr`）
+  - label 粗體 + muted 色，value 正常色
+  - 確保 label 和 value 之間有明確的視覺對齊
+- 改善 Model card 佈局：
+  - 將 type tag 和 size 合併到 name 同一行，用分隔符連接（例如 `✅ Marian_v18as98 · lora · 218.4 MB`）
+  - 解決目前 type 和 size 黏在一起的問題（`lora218.4 MB`）
+  - 路徑保留縮短顯示（`models/loras/...`），加 `text-overflow: ellipsis`
+- 改善 Missing count 語意：
+  - 0 missing 時顯示綠色 `All found` 或隱藏
+  - 有 missing 時才顯示紅色計數
+
+**相關檔案**
+- `ui/src/App.vue` — 修改：新增圖片預覽區域
+- `ui/src/components/GenerationInfo.vue` — 修改：accordion 群組化、參數 grid
+- `ui/src/components/ModelCard.vue` — 修改：合併佈局、路徑 ellipsis
+- `ui/src/components/ModelList.vue` — 修改：Missing count 語意
+
+**完成檢查**
+- 建置成功（`cd ui && npm run build`）
+- 在 ComfyUI 中（可用 Playwright MCP 檢查）：
+  - 輸入 image ID 後，圖片預覽正確顯示
+  - Prompt/Negative Prompt 的 toggle 和內容在同一個視覺容器中
+  - 參數列為兩欄 grid 且對齊整齊
+  - Model card 中 type 和 size 不再黏合
+  - 全部已下載時顯示正面語意（非紅色 Missing: 0）
+  - 無橫向捲軸
+
+**實作備註**
+- [技術障礙] Vite library mode 會將 Vue scoped CSS 提取為獨立的 `.css` 檔案（`assets/main-xxx.css`），但 ComfyUI 只載入 `main.js`，不會自動載入對應的 CSS 檔案。結果是所有 scoped CSS（包含之前任務的樣式）在瀏覽器中完全不生效（inspector 顯示 `maxHeight: "none"`, `display: "block"`, `border: "0px none"` 等）。解決方式是安裝 `vite-plugin-css-injected-by-js` dev dependency，讓 CSS 在 JS 執行時自動注入 `<style>` tag 到 `<head>` 中。
+- [後續依賴] 此修正影響所有前端任務的 CSS，`vite.config.ts` 新增了 `cssInjectedByJsPlugin()` plugin，後續前端修改不需額外處理。舊的獨立 CSS 檔案已清理。
+- [技術障礙] PrimeVue 的 CSS 變數（`--p-text-color`、`--p-text-muted-color`、`--p-surface-*`、`--p-content-border-color`）在 ComfyUI 的深色主題下**不會自動切換**，全部維持亮色主題的值。原因是 ComfyUI 深色主題使用自己的 CSS 變數系統（`--fg-color`、`--descrip-text`、`--border-color`、`--comfy-input-bg` 等），而非 PrimeVue 的 design token。結果是深色主題下文字幾乎看不見（深色文字在深色背景上）、card 背景是亮白色。
+- [修正方案] 將所有前端元件的 CSS 變數從 PrimeVue 替換為 ComfyUI 原生變數：`--p-text-color` → `--fg-color`、`--p-text-muted-color` → `--descrip-text`、`--p-content-border-color` → `--border-color`、`--p-surface-50` → `--comfy-input-bg`、input color 改用 `--input-text`、error 用 `--error-text`。保留 `--p-primary-*`、`--p-red-500`（border）、`--p-green-600`、`--p-yellow-500`（這些在兩個主題都有正確值）。影響 6 個 `.vue` 檔案（App、GenerationInfo、ModelCard、ModelList、ImageInput、ApiKeyWarning）。
+- [後續依賴] 後續新增前端元件時，文字色應使用 `--fg-color`/`--descrip-text`/`--input-text`，邊框用 `--border-color`，背景用 `--comfy-input-bg`，不要使用 PrimeVue 的 `--p-text-color` 等 token。
 
 ---
 

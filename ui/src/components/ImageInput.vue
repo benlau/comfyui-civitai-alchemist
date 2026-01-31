@@ -52,7 +52,7 @@ function submit() {
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: var(--p-text-muted-color);
+  color: var(--descrip-text);
   margin-bottom: 4px;
 }
 
@@ -66,9 +66,9 @@ function submit() {
   min-width: 0;
   padding: 6px 8px;
   font-size: 12px;
-  color: var(--p-text-color);
+  color: var(--input-text);
   background: var(--comfy-input-bg);
-  border: 1px solid var(--p-content-border-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   outline: none;
   transition: border-color 0.15s;
