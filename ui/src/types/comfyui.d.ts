@@ -39,9 +39,21 @@ interface ComfyApi {
   removeEventListener(type: string, callback: (event: CustomEvent) => void): void
 }
 
+interface LGraphNode {
+  computeSize(): [number, number]
+  setSize(size: [number, number]): void
+  size: [number, number]
+}
+
+interface LGraph {
+  _nodes: LGraphNode[]
+  arrange(margin?: number): void
+}
+
 interface ComfyApp {
   extensionManager: ComfyExtensionManager
   api: ComfyApi
+  graph: LGraph
   registerExtension(extension: ComfyExtensionDefinition): void
   loadApiJson(apiData: Record<string, unknown>, fileName?: string): Promise<void>
 }

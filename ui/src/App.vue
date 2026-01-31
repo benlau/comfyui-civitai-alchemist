@@ -334,6 +334,14 @@ async function doGenerateWorkflow() {
     const result = await generateWorkflow(metadata.value, resources.value)
     const filename = `civitai_${metadata.value.image_id || 'workflow'}.json`
     await window.app.loadApiJson(result.workflow, filename)
+
+    // Fix: loadApiJson's arrange() uses default sizes. Recompute and re-arrange.
+    for (const node of window.app.graph._nodes) {
+      const size = node.computeSize()
+      node.setSize(size)
+    }
+    window.app.graph.arrange()
+
     workflowResult.value = {
       type: result.workflow_type,
       nodeCount: result.node_count,

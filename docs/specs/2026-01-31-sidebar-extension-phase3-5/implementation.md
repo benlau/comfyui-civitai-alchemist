@@ -12,6 +12,8 @@
 - [x] 實作前端下載流程整合（單一下載、批次下載、取消）
 - [x] 實作後端 Workflow 生成 API
 - [x] 實作前端 Workflow 生成與 Canvas 載入
+- [x] 研究 Workflow 節點自動排版方案
+- [x] 實作 Workflow 節點自動排版
 - [ ] 發佈準備（GitHub Actions、版本號、README）
 - [ ] 執行驗收測試
 - [ ] 更新專案文件
@@ -239,6 +241,84 @@
 
 **實作備註**
 照預期開發
+
+---
+
+### 研究 Workflow 節點自動排版方案
+
+**背景**
+ComfyUI 的 `loadApiJson()` 內建的 `arrange()` 無法正確排列節點（所有節點堆疊在 (10,10)）。這是 ComfyUI 前端本身的問題：`loadApiJson` 在呼叫 `arrange()` 前沒有先對節點執行 `computeSize()`/`setSize()`，導致排列演算法使用預設尺寸而失效。即使手動拖放 API format JSON 檔案到 ComfyUI 也會有同樣問題。
+
+**研究目標**
+找出一個方案，讓生成的 workflow 載入 ComfyUI canvas 時節點能正確排列，不互相重疊。
+
+**研究方向**
+1. **後端計算節點座標（Graph format 輸出）**：
+   - `build_workflow()` 目前輸出 API format（flat dict, string keys as node IDs）
+   - ComfyUI 的 graph format 包含每個節點的 `pos`（座標）、`size`（尺寸）、`links`（連接資訊）
+   - 是否可以在後端將 API format 轉換為 graph format，自行計算每個節點的座標？
+   - 需要研究 graph format 的完整結構（參考 ComfyUI 預設 workflow 或匯出的 workflow）
+   - 排版演算法：按 DAG 依賴層級從左到右排列（類似 LiteGraph 的 `arrange()`）
+   - 需要估算每個節點的寬度和高度（根據 class_type 和 widget 數量）
+2. **前端載入後觸發排版**：
+   - 改用 `loadGraphData()` 而非 `loadApiJson()`，傳入帶座標的 graph format
+   - 或在 `loadApiJson()` 後用其他方式觸發正確的排版
+   - 研究是否有第三方 ComfyUI extension 的排版方案可參考（如 comfyui-auto-nodes-layout 使用 ELK.js）
+3. **混合方案**：
+   - 後端生成帶有基本座標的 graph format
+   - 前端載入後可選擇性地微調
+
+**研究產出**
+- 確定最佳方案（後端 vs 前端 vs 混合）
+- 如果是後端方案：定義 graph format 結構、節點尺寸估算規則、排版演算法
+- 如果是前端方案：確認可行的 API 呼叫方式
+
+**相關檔案**
+- `pipeline/generate_workflow.py` — 目前的 workflow 生成邏輯
+- ComfyUI frontend `src/scripts/app.ts` — `loadApiJson()` 和 `loadGraphData()` 實作
+- ComfyUI frontend `src/lib/litegraph/src/LGraph.ts` — `arrange()` 實作
+
+**實作備註**
+[技術決策] 比較三個方案：(A) 前端修復 — loadApiJson 後手動呼叫 computeSize+arrange、(B) 後端生成 Graph Format — 在 Python 中計算座標、(C) Monkey-patch loadApiJson。選擇方案 A，原因：
+1. computeSize() 需要瀏覽器 canvas context 測量文字寬度（LGraphCanvas._measureText 使用 ctx.measureText），後端無法精確計算
+2. 方案 A 只需在 App.vue 中 loadApiJson 後加 3 行程式碼（遍歷 nodes → computeSize → setSize → arrange）
+3. 不修改 ComfyUI 核心、不影響其他 extension
+4. window.app.graph._nodes 和 window.app.graph.arrange() 在 extension 中可直接存取（已確認 app.graph === app.rootGraph）
+
+---
+
+### 實作 Workflow 節點自動排版
+
+**實作要點**
+- 修改 `ui/src/App.vue` 中呼叫 `loadApiJson` 的程式碼，在載入後加入排版修復：
+  ```typescript
+  // 載入 API format workflow
+  window.app.loadApiJson(workflow, filename)
+
+  // Fix: loadApiJson's arrange() fails because it doesn't call computeSize() first.
+  // Manually compute sizes and re-arrange after loading.
+  for (const node of window.app.graph._nodes) {
+    const size = node.computeSize()
+    node.setSize(size)
+  }
+  window.app.graph.arrange()
+  ```
+- 更新 `ui/src/types/comfyui.d.ts` 型別宣告，新增 `graph` 屬性的型別（包含 `_nodes` 和 `arrange()`）
+- 不需要修改後端 `generate_workflow.py`，繼續輸出 API format
+
+**相關檔案**
+- `ui/src/App.vue` — 在 loadApiJson 呼叫後加入排版修復邏輯
+- `ui/src/types/comfyui.d.ts` — 新增 graph 相關型別宣告
+
+**完成檢查**
+- 使用三個測試 image ID（116872916、118577644、119258762）生成 workflow 後，節點在 canvas 上正確排列、不互相重疊
+- 連接線清晰可見，從左到右依照依賴順序排列
+- `cd ui && npm run build` 建置成功（如有前端修改）
+
+**實作備註**
+在 `App.vue` 的 `doGenerateWorkflow()` 中，`loadApiJson()` 呼叫後加入 3 行修復：遍歷所有節點 → `computeSize()` → `setSize()` → 最後 `graph.arrange()`。問題根因是 `loadApiJson` 內部的 `arrange()` 使用預設 node size（尚未經過 `computeSize`），導致排版間距不正確。修復後節點正確依 DAG 層級從左到右排列。
+
+注意：初始研究認為 `arrange()` 在 LiteGraph 資料層失敗，但 debug 後發現 `arrange()` 確實正常運作（`pos` 值正確分布）。實際問題是 Vue renderer 需要透過 `setSize()` 觸發響應式更新才能正確反映位置。用戶手動切換 renderer 設定後確認修復有效。
 
 ---
 
