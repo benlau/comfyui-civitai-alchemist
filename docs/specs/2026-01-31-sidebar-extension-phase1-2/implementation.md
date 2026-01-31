@@ -521,7 +521,7 @@ dependencies = ["requests>=2.31.0"]
 cli = ["tqdm", "python-dotenv"]
 
 [project.urls]
-Repository = "https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist"
+Repository = "https://gitlab.com/purefern5078/comfyui-civitai-alchemist"
 
 [tool.comfy]
 PublisherId = "ThePhilosopherStone"

@@ -51,7 +51,7 @@ Works as both a **ComfyUI sidebar extension** and a **standalone CLI tool**.
 
 ```bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist.git
+git clone https://gitlab.com/purefern5078/comfyui-civitai-alchemist.git
 ```
 
 2. Start (or restart) ComfyUI. The Civitai Alchemist tab will appear in the left sidebar.
@@ -63,7 +63,7 @@ git clone https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist.git
 ### As a Standalone CLI Tool
 
 ```bash
-git clone https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist.git
+git clone https://gitlab.com/purefern5078/comfyui-civitai-alchemist.git
 cd comfyui-civitai-alchemist
 
 # Install with CLI extras (tqdm for progress bars, dotenv for .env support)

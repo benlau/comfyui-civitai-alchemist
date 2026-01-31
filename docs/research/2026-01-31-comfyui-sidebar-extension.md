@@ -726,7 +726,7 @@ cli = [
 ]
 
 [project.urls]
-Repository = "https://github.com/purefern5078/comfyui-civitai-alchemist"
+Repository = "https://gitlab.com/purefern5078/comfyui-civitai-alchemist"
 
 [tool.comfy]
 PublisherId = "purefern5078"
