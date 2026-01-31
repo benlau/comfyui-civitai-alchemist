@@ -10,7 +10,7 @@
 - [x] 實作後端下載 API 與 WebSocket 進度推送
 - [x] 擴展前端 ModelCard 下載狀態與進度 UI
 - [x] 實作前端下載流程整合（單一下載、批次下載、取消）
-- [ ] 實作後端 Workflow 生成 API
+- [x] 實作後端 Workflow 生成 API
 - [ ] 實作前端 Workflow 生成與 Canvas 載入
 - [ ] 發佈準備（GitHub Actions、版本號、README）
 - [ ] 執行驗收測試
@@ -190,6 +190,11 @@
   - 回傳的 JSON 包含預期的 node（CheckpointLoaderSimple、KSampler 等）
   - 傳入無效資料 → 回傳適當的錯誤訊息和 HTTP status code
 
+**實作備註**
+- [方向調整] 原計畫說「不修改 generate_workflow.py」，但 `_extract_common_params()` 在找不到 checkpoint 時呼叫 `sys.exit(1)`，在 web server 環境中會直接關閉 ComfyUI 進程。改為拋出 `ValueError`，CLI 的 `main()` 不受影響（因為 `main()` 是唯一的入口，會在其之前就處理好）。
+- [技術決策] 研究確認 ComfyUI 前端有 `app.loadApiJson(apiData, fileName)` 方法可直接載入 API format workflow（使用者也驗證過），不需要做 API format → graph format 轉換。後端直接回傳 `build_workflow()` 的結果即可。
+- [後續依賴] 前端任務使用 `window.app.loadApiJson(workflow, filename)` 載入 workflow，而非 `loadGraphData()`。`loadApiJson` 會自動建立 nodes、連接 links 並排列。
+
 ---
 
 ### 實作前端 Workflow 生成與 Canvas 載入
@@ -205,8 +210,9 @@
     - 有缺少：顯示警告對話框（列出缺少的 model），使用者確認後繼續
     - 無缺少：直接生成
   - 呼叫 `generateWorkflow()` → 取得 workflow JSON
-  - 使用 `window.app.loadGraphData(workflow)` 或對應 API 載入到 canvas
-    - 注意：需要確認 API format vs graph format 的相容性，可能需要包裝成 `{ workflow: apiData, output: {} }` 格式
+  - 使用 `window.app.loadApiJson(workflow, filename)` 載入到 canvas
+    - ComfyUI 前端的 `loadApiJson()` 原生支援 API format，會自動建立 nodes 並排列
+    - `build_workflow()` 回傳的就是 API format，不需要任何格式轉換
   - 載入成功後在 sidebar 顯示確認訊息（workflow type + node count）
 - 新增 UI 元件或在 ModelList 下方新增區域：
   - 「Generate Workflow」按鈕（條件：metadata 已載入）

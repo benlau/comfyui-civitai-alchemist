@@ -35,6 +35,7 @@ import folder_paths
 
 from pipeline.fetch_metadata import parse_image_id, extract_metadata
 from pipeline.resolve_models import resolve_resource
+from pipeline.generate_workflow import build_workflow
 from civitai_utils.civitai_api import CivitaiAPI
 from civitai_utils.model_manager import ModelManager
 
@@ -528,3 +529,75 @@ async def handle_download_cancel(request):
         return web.json_response({"cancelled": True})
 
     return web.json_response({"error": "Task not found"}, status=404)
+
+
+# ── Workflow generation ──────────────────────────────────────────────
+
+
+@routes.post("/civitai/generate")
+async def handle_generate_workflow(request):
+    """
+    POST /civitai/generate
+
+    Accepts: { "metadata": {...}, "resources": {...} }
+    Returns: { "workflow": {...}, "workflow_type": "txt2img"|"txt2img-hires", "node_count": N }
+
+    Reuses pipeline/generate_workflow.py's build_workflow() to produce
+    a ComfyUI API-format workflow from metadata and resolved resources.
+    """
+    try:
+        data = await request.json()
+    except Exception:
+        return web.json_response(
+            {"error": "Invalid JSON in request body"},
+            status=400,
+        )
+
+    metadata = data.get("metadata")
+    resources = data.get("resources")
+
+    if not metadata:
+        return web.json_response(
+            {"error": "metadata is required"},
+            status=400,
+        )
+
+    if resources is None:
+        return web.json_response(
+            {"error": "resources is required"},
+            status=400,
+        )
+
+    # resources may be a list (from frontend) or a dict with "resources" key
+    # build_workflow expects { "resources": [...] }
+    if isinstance(resources, list):
+        resources_dict = {"resources": resources}
+    elif isinstance(resources, dict) and "resources" in resources:
+        resources_dict = resources
+    else:
+        return web.json_response(
+            {"error": "resources must be a list or object with 'resources' key"},
+            status=400,
+        )
+
+    try:
+        workflow = build_workflow(metadata, resources_dict)
+    except ValueError as e:
+        return web.json_response(
+            {"error": str(e)},
+            status=422,
+        )
+    except Exception as e:
+        return web.json_response(
+            {"error": f"Workflow generation failed: {e}"},
+            status=500,
+        )
+
+    # Determine workflow type
+    workflow_type = metadata.get("workflow_type", "txt2img")
+
+    return web.json_response({
+        "workflow": workflow,
+        "workflow_type": workflow_type,
+        "node_count": len(workflow),
+    })

@@ -110,8 +110,7 @@ def _extract_common_params(metadata: dict, resources: dict) -> dict:
             checkpoint_filename = f"{model_name}.safetensors"
             print(f"Warning: No checkpoint resolved, guessing filename: {checkpoint_filename}")
         else:
-            print("Error: No checkpoint model found in resources", file=sys.stderr)
-            sys.exit(1)
+            raise ValueError("No checkpoint model found in resources")
 
     clip_skip = metadata.get("clip_skip")
 
