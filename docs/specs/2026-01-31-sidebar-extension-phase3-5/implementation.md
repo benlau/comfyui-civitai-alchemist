@@ -9,7 +9,7 @@
 
 - [x] 實作後端下載 API 與 WebSocket 進度推送
 - [x] 擴展前端 ModelCard 下載狀態與進度 UI
-- [ ] 實作前端下載流程整合（單一下載、批次下載、取消）
+- [x] 實作前端下載流程整合（單一下載、批次下載、取消）
 - [ ] 實作後端 Workflow 生成 API
 - [ ] 實作前端 Workflow 生成與 Canvas 載入
 - [ ] 發佈準備（GitHub Actions、版本號、README）
@@ -155,6 +155,9 @@
   - 點擊 Download All Missing → 依序下載 → 全部完成後按鈕消失
   - 點擊 Cancel → 下載停止 → .part 檔案已清除 → 顯示 Download 按鈕可重試
   - 下載失敗 → 顯示錯誤訊息 + Retry 按鈕
+
+**實作備註**
+- [方向調整] `civitai_routes.py` 的 `_download_single()` 中，取消時的 `.part` 檔案清理原本在 `with open()` 區塊內呼叫 `_cleanup_part()`，但 Windows 上檔案鎖定導致刪除失敗。改為使用 `cancelled` flag + `break` 跳出迴圈，讓 `with` 區塊關閉檔案後再清理。
 
 ---
 

@@ -1,4 +1,4 @@
-import type { Metadata, ResolveResponse } from '../types'
+import type { Metadata, Resource, ResolveResponse } from '../types'
 
 /**
  * Read the Civitai API key from ComfyUI Settings.
@@ -55,4 +55,62 @@ export async function resolveModels(metadata: Metadata): Promise<ResolveResponse
     throw new Error(message)
   }
   return response.json()
+}
+
+/**
+ * Start a single model download in the background.
+ * Returns the task_id for tracking progress via WebSocket.
+ */
+export async function downloadModel(resource: Resource): Promise<{ task_id: string }> {
+  const response = await window.app.api.fetchApi('/civitai/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resource, api_key: getApiKey() }),
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || `Download request failed (${response.status})`)
+  }
+  return response.json()
+}
+
+/**
+ * Start a batch download for multiple missing models.
+ * Only sends resolved, not-yet-downloaded resources.
+ * Returns the task_id for the batch task.
+ */
+export async function downloadAllMissing(resources: Resource[]): Promise<{ task_id: string }> {
+  const missing = resources.filter(r => r.resolved && !r.already_downloaded)
+  const response = await window.app.api.fetchApi('/civitai/download-all', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resources: missing, api_key: getApiKey() }),
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || `Batch download request failed (${response.status})`)
+  }
+  return response.json()
+}
+
+/**
+ * Cancel a specific download task.
+ */
+export async function cancelDownload(taskId: string): Promise<void> {
+  await window.app.api.fetchApi('/civitai/download-cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ task_id: taskId }),
+  })
+}
+
+/**
+ * Cancel all active download tasks.
+ */
+export async function cancelAllDownloads(): Promise<void> {
+  await window.app.api.fetchApi('/civitai/download-cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cancel_all: true }),
+  })
 }

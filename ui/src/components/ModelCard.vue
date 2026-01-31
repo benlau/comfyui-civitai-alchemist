@@ -34,7 +34,7 @@
 
     <!-- State: downloading — show progress bar + cancel -->
     <div v-if="resource.downloadStatus === 'downloading'" class="card-detail">
-      <ProgressBar :value="resource.downloadProgress ?? 0" :showValue="(resource.downloadProgress ?? 0) > 10" class="download-progress" />
+      <ProgressBar :value="resource.downloadProgress ?? 0" :showValue="false" class="download-progress" />
       <span class="progress-text">{{ formattedDownloaded }} / {{ formattedTotal }}</span>
       <button class="action-btn cancel-btn" @click="$emit('cancel', resource)">Cancel</button>
     </div>

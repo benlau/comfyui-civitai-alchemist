@@ -321,18 +321,18 @@ async def _download_single(resource: dict, api_key: str, task_id: str,
                 last_progress_time = 0.0
                 sha256_hash = hashlib.sha256()
 
+                cancelled = False
                 with open(part_path, "wb") as f:
                     async for chunk in resp.content.iter_chunked(DOWNLOAD_CHUNK_SIZE):
                         if cancel_event.is_set():
-                            _cleanup_part(part_path)
-                            _send_progress(task_id, filename, "cancelled")
-                            return False
+                            cancelled = True
+                            break
 
                         f.write(chunk)
                         sha256_hash.update(chunk)
                         downloaded_bytes += len(chunk)
 
-                        # Throttle progress updates
+                        # Throttle progress updates (inside with block)
                         now = time.monotonic()
                         if now - last_progress_time >= PROGRESS_INTERVAL:
                             last_progress_time = now
@@ -341,6 +341,12 @@ async def _download_single(resource: dict, api_key: str, task_id: str,
                                            progress=progress,
                                            downloaded_bytes=downloaded_bytes,
                                            total_bytes=total_bytes)
+
+                # File handle is now closed; safe to delete on Windows
+                if cancelled:
+                    _cleanup_part(part_path)
+                    _send_progress(task_id, filename, "cancelled")
+                    return False
 
                 # Final 100% progress
                 _send_progress(task_id, filename, "downloading",

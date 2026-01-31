@@ -35,6 +35,8 @@ interface ComfyExtensionDefinition {
 
 interface ComfyApi {
   fetchApi(route: string, options?: RequestInit): Promise<Response>
+  addEventListener(type: string, callback: (event: CustomEvent) => void): void
+  removeEventListener(type: string, callback: (event: CustomEvent) => void): void
 }
 
 interface ComfyApp {

@@ -3,7 +3,7 @@
   try {
     if (typeof document != "undefined") {
       var elementStyle = document.createElement("style");
-      elementStyle.appendChild(document.createTextNode(".api-key-warning[data-v-3da5e8fa] {\r\n  margin-bottom: 8px;\n}\n.warning-box[data-v-3da5e8fa] {\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--p-yellow-500);\r\n  border-radius: 6px;\r\n  padding: 12px;\n}\n.warning-title[data-v-3da5e8fa] {\r\n  margin: 0 0 6px 0;\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--p-yellow-500);\n}\n.warning-text[data-v-3da5e8fa] {\r\n  margin: 0 0 10px 0;\r\n  font-size: 12px;\r\n  color: var(--descrip-text);\r\n  line-height: 1.4;\n}\n.open-settings-btn[data-v-3da5e8fa] {\r\n  display: block;\r\n  width: 100%;\r\n  padding: 6px 12px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--fg-color);\r\n  background: var(--comfy-menu-secondary-bg);\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  transition: background 0.15s;\n}\n.open-settings-btn[data-v-3da5e8fa]:hover {\r\n  background: var(--border-color);\n}\r\n\n.image-input[data-v-c224539d] {\r\n  margin-bottom: 8px;\n}\n.input-label[data-v-c224539d] {\r\n  display: block;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--descrip-text);\r\n  margin-bottom: 4px;\n}\n.input-row[data-v-c224539d] {\r\n  display: flex;\r\n  gap: 4px;\n}\n.input-field[data-v-c224539d] {\r\n  flex: 1;\r\n  min-width: 0;\r\n  padding: 6px 8px;\r\n  font-size: 12px;\r\n  color: var(--input-text);\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  outline: none;\r\n  transition: border-color 0.15s;\n}\n.input-field[data-v-c224539d]:focus {\r\n  border-color: var(--p-primary-500);\n}\n.input-field[data-v-c224539d]:disabled {\r\n  opacity: 0.5;\r\n  cursor: not-allowed;\n}\n.go-btn[data-v-c224539d] {\r\n  padding: 6px 14px;\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: #fff;\r\n  background: var(--p-primary-600);\r\n  border: none;\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  transition: background 0.15s;\r\n  white-space: nowrap;\n}\n.go-btn[data-v-c224539d]:hover:not(:disabled) {\r\n  background: var(--p-primary-500);\n}\n.go-btn[data-v-c224539d]:disabled {\r\n  opacity: 0.5;\r\n  cursor: not-allowed;\n}\r\n\n.generation-info[data-v-34381e0c] {\r\n  margin-bottom: 16px;\n}\n.section-title[data-v-34381e0c] {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--fg-color);\r\n  margin: 0 0 8px 0;\r\n  text-transform: uppercase;\r\n  letter-spacing: 0.5px;\n}\n.accordion-panel[data-v-34381e0c] {\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 6px;\r\n  margin-bottom: 6px;\r\n  overflow: hidden;\n}\n.accordion-header[data-v-34381e0c] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 4px;\r\n  width: 100%;\r\n  padding: 6px 8px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--descrip-text);\r\n  background: var(--comfy-input-bg);\r\n  border: none;\r\n  cursor: pointer;\r\n  transition: color 0.15s;\n}\n.accordion-header[data-v-34381e0c]:hover {\r\n  color: var(--fg-color);\n}\n.toggle-icon[data-v-34381e0c] {\r\n  font-size: 10px;\r\n  transition: transform 0.15s;\r\n  display: inline-block;\n}\n.toggle-icon.open[data-v-34381e0c] {\r\n  transform: rotate(90deg);\n}\n.accordion-body[data-v-34381e0c] {\r\n  padding: 8px;\r\n  border-top: 1px solid var(--border-color);\n}\n.prompt-text[data-v-34381e0c] {\r\n  font-size: 11px;\r\n  line-height: 1.5;\r\n  color: var(--descrip-text);\r\n  word-break: break-word;\r\n  white-space: pre-wrap;\r\n  max-height: 200px;\r\n  overflow-y: auto;\n}\n.param-grid[data-v-34381e0c] {\r\n  display: grid;\r\n  grid-template-columns: auto 1fr;\r\n  gap: 4px 12px;\r\n  margin-top: 8px;\r\n  font-size: 12px;\n}\n.param-label[data-v-34381e0c] {\r\n  color: var(--descrip-text);\r\n  font-weight: 600;\r\n  white-space: nowrap;\n}\n.param-value[data-v-34381e0c] {\r\n  color: var(--fg-color);\n}\r\n\n.model-card[data-v-75a4eecf] {\r\n  padding: 8px 10px;\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 6px;\n}\n.model-missing[data-v-75a4eecf] {\r\n  border-color: var(--p-red-500);\r\n  border-style: dashed;\n}\n.model-downloading[data-v-75a4eecf] {\r\n  border-color: var(--p-primary-500);\r\n  border-style: solid;\n}\n.card-header[data-v-75a4eecf] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n  min-width: 0;\n}\n.model-status[data-v-75a4eecf] {\r\n  flex-shrink: 0;\r\n  font-size: 12px;\n}\n.model-name[data-v-75a4eecf] {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--fg-color);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  min-width: 0;\n}\n.model-meta[data-v-75a4eecf] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 4px;\r\n  flex-shrink: 0;\r\n  margin-left: auto;\n}\n.model-type-tag[data-v-75a4eecf] {\r\n  display: inline-block;\r\n  padding: 1px 6px;\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  text-transform: uppercase;\r\n  color: var(--p-primary-500);\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\r\n  border-radius: 3px;\r\n  white-space: nowrap;\n}\n.meta-sep[data-v-75a4eecf] {\r\n  color: var(--descrip-text);\r\n  font-size: 11px;\n}\n.model-size[data-v-75a4eecf] {\r\n  font-size: 11px;\r\n  color: var(--descrip-text);\r\n  white-space: nowrap;\n}\n.card-path[data-v-75a4eecf] {\r\n  font-size: 10px;\r\n  color: var(--descrip-text);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  margin-top: 4px;\n}\n.card-detail[data-v-75a4eecf] {\r\n  margin-top: 6px;\n}\n.card-error[data-v-75a4eecf] {\r\n  font-size: 10px;\r\n  color: var(--error-text);\r\n  display: block;\n}\n.card-status-text[data-v-75a4eecf] {\r\n  font-size: 10px;\r\n  color: var(--descrip-text);\n}\n.download-progress[data-v-75a4eecf] {\r\n  height: 6px;\r\n  margin-bottom: 4px;\n}\n.progress-text[data-v-75a4eecf] {\r\n  font-size: 10px;\r\n  color: var(--descrip-text);\r\n  display: block;\r\n  margin-bottom: 4px;\n}\n.action-btn[data-v-75a4eecf] {\r\n  display: inline-block;\r\n  padding: 3px 12px;\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  background: var(--comfy-input-bg);\r\n  color: var(--fg-color);\r\n  margin-top: 4px;\r\n  transition: background 0.15s, border-color 0.15s;\n}\n.action-btn[data-v-75a4eecf]:hover {\r\n  background: var(--border-color);\n}\n.download-btn[data-v-75a4eecf] {\r\n  color: var(--p-primary-500);\r\n  border-color: var(--p-primary-500);\n}\n.download-btn[data-v-75a4eecf]:hover {\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\n}\n.cancel-btn[data-v-75a4eecf] {\r\n  color: var(--error-text);\r\n  border-color: var(--error-text);\n}\n.cancel-btn[data-v-75a4eecf]:hover {\r\n  background: rgba(220, 38, 38, 0.1);\n}\n.retry-btn[data-v-75a4eecf] {\r\n  color: var(--p-primary-500);\r\n  border-color: var(--p-primary-500);\r\n  margin-top: 4px;\n}\n.retry-btn[data-v-75a4eecf]:hover {\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\n}\r\n\n.model-list[data-v-f57a1591] {\r\n  margin-bottom: 16px;\n}\n.section-header[data-v-f57a1591] {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  margin-bottom: 8px;\n}\n.section-title[data-v-f57a1591] {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--fg-color);\r\n  margin: 0;\r\n  text-transform: uppercase;\r\n  letter-spacing: 0.5px;\n}\n.summary-text[data-v-f57a1591] {\r\n  font-size: 11px;\n}\n.summary-text.all-found[data-v-f57a1591] {\r\n  color: var(--p-green-600);\r\n  font-weight: 600;\n}\n.summary-text.has-missing[data-v-f57a1591] {\r\n  color: var(--error-text);\r\n  font-weight: 600;\n}\n.cards[data-v-f57a1591] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\n}\r\n\n.image-preview[data-v-241f85ab] {\r\n  margin-bottom: 12px;\r\n  border-radius: 6px;\r\n  overflow: hidden;\r\n  border: 1px solid var(--border-color);\r\n  max-height: 180px;\r\n  background: var(--comfy-input-bg);\n}\n.image-preview img[data-v-241f85ab] {\r\n  display: block;\r\n  width: 100%;\r\n  height: 100%;\r\n  max-height: 180px;\r\n  object-fit: contain;\n}\n.hint-text[data-v-241f85ab] {\r\n  color: var(--descrip-text);\r\n  font-size: 12px;\r\n  margin: 0;\r\n  line-height: 1.4;\n}\n.status-box[data-v-241f85ab] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  padding: 10px 12px;\r\n  border-radius: 6px;\r\n  font-size: 12px;\r\n  margin-bottom: 12px;\n}\n.loading-box[data-v-241f85ab] {\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--border-color);\r\n  color: var(--descrip-text);\n}\n.error-box[data-v-241f85ab] {\r\n  background: rgba(220, 38, 38, 0.1);\r\n  border: 1px solid var(--error-text);\r\n  color: var(--error-text);\n}\n.spinner[data-v-241f85ab] {\r\n  width: 14px;\r\n  height: 14px;\r\n  border: 2px solid var(--border-color);\r\n  border-top-color: var(--p-primary-500);\r\n  border-radius: 50%;\r\n  animation: spin-241f85ab 0.6s linear infinite;\n}\n@keyframes spin-241f85ab {\nto { transform: rotate(360deg);\n}\n}"));
+      elementStyle.appendChild(document.createTextNode(".api-key-warning[data-v-3da5e8fa] {\r\n  margin-bottom: 8px;\n}\n.warning-box[data-v-3da5e8fa] {\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--p-yellow-500);\r\n  border-radius: 6px;\r\n  padding: 12px;\n}\n.warning-title[data-v-3da5e8fa] {\r\n  margin: 0 0 6px 0;\r\n  font-size: 13px;\r\n  font-weight: 600;\r\n  color: var(--p-yellow-500);\n}\n.warning-text[data-v-3da5e8fa] {\r\n  margin: 0 0 10px 0;\r\n  font-size: 12px;\r\n  color: var(--descrip-text);\r\n  line-height: 1.4;\n}\n.open-settings-btn[data-v-3da5e8fa] {\r\n  display: block;\r\n  width: 100%;\r\n  padding: 6px 12px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--fg-color);\r\n  background: var(--comfy-menu-secondary-bg);\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  transition: background 0.15s;\n}\n.open-settings-btn[data-v-3da5e8fa]:hover {\r\n  background: var(--border-color);\n}\r\n\n.image-input[data-v-c224539d] {\r\n  margin-bottom: 8px;\n}\n.input-label[data-v-c224539d] {\r\n  display: block;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--descrip-text);\r\n  margin-bottom: 4px;\n}\n.input-row[data-v-c224539d] {\r\n  display: flex;\r\n  gap: 4px;\n}\n.input-field[data-v-c224539d] {\r\n  flex: 1;\r\n  min-width: 0;\r\n  padding: 6px 8px;\r\n  font-size: 12px;\r\n  color: var(--input-text);\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  outline: none;\r\n  transition: border-color 0.15s;\n}\n.input-field[data-v-c224539d]:focus {\r\n  border-color: var(--p-primary-500);\n}\n.input-field[data-v-c224539d]:disabled {\r\n  opacity: 0.5;\r\n  cursor: not-allowed;\n}\n.go-btn[data-v-c224539d] {\r\n  padding: 6px 14px;\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: #fff;\r\n  background: var(--p-primary-600);\r\n  border: none;\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  transition: background 0.15s;\r\n  white-space: nowrap;\n}\n.go-btn[data-v-c224539d]:hover:not(:disabled) {\r\n  background: var(--p-primary-500);\n}\n.go-btn[data-v-c224539d]:disabled {\r\n  opacity: 0.5;\r\n  cursor: not-allowed;\n}\r\n\n.generation-info[data-v-34381e0c] {\r\n  margin-bottom: 16px;\n}\n.section-title[data-v-34381e0c] {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--fg-color);\r\n  margin: 0 0 8px 0;\r\n  text-transform: uppercase;\r\n  letter-spacing: 0.5px;\n}\n.accordion-panel[data-v-34381e0c] {\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 6px;\r\n  margin-bottom: 6px;\r\n  overflow: hidden;\n}\n.accordion-header[data-v-34381e0c] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 4px;\r\n  width: 100%;\r\n  padding: 6px 8px;\r\n  font-size: 12px;\r\n  font-weight: 500;\r\n  color: var(--descrip-text);\r\n  background: var(--comfy-input-bg);\r\n  border: none;\r\n  cursor: pointer;\r\n  transition: color 0.15s;\n}\n.accordion-header[data-v-34381e0c]:hover {\r\n  color: var(--fg-color);\n}\n.toggle-icon[data-v-34381e0c] {\r\n  font-size: 10px;\r\n  transition: transform 0.15s;\r\n  display: inline-block;\n}\n.toggle-icon.open[data-v-34381e0c] {\r\n  transform: rotate(90deg);\n}\n.accordion-body[data-v-34381e0c] {\r\n  padding: 8px;\r\n  border-top: 1px solid var(--border-color);\n}\n.prompt-text[data-v-34381e0c] {\r\n  font-size: 11px;\r\n  line-height: 1.5;\r\n  color: var(--descrip-text);\r\n  word-break: break-word;\r\n  white-space: pre-wrap;\r\n  max-height: 200px;\r\n  overflow-y: auto;\n}\n.param-grid[data-v-34381e0c] {\r\n  display: grid;\r\n  grid-template-columns: auto 1fr;\r\n  gap: 4px 12px;\r\n  margin-top: 8px;\r\n  font-size: 12px;\n}\n.param-label[data-v-34381e0c] {\r\n  color: var(--descrip-text);\r\n  font-weight: 600;\r\n  white-space: nowrap;\n}\n.param-value[data-v-34381e0c] {\r\n  color: var(--fg-color);\n}\r\n\n.model-card[data-v-9b8dc5c9] {\r\n  padding: 8px 10px;\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 6px;\n}\n.model-missing[data-v-9b8dc5c9] {\r\n  border-color: var(--p-red-500);\r\n  border-style: dashed;\n}\n.model-downloading[data-v-9b8dc5c9] {\r\n  border-color: var(--p-primary-500);\r\n  border-style: solid;\n}\n.card-header[data-v-9b8dc5c9] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 6px;\r\n  min-width: 0;\n}\n.model-status[data-v-9b8dc5c9] {\r\n  flex-shrink: 0;\r\n  font-size: 12px;\n}\n.model-name[data-v-9b8dc5c9] {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--fg-color);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  min-width: 0;\n}\n.model-meta[data-v-9b8dc5c9] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 4px;\r\n  flex-shrink: 0;\r\n  margin-left: auto;\n}\n.model-type-tag[data-v-9b8dc5c9] {\r\n  display: inline-block;\r\n  padding: 1px 6px;\r\n  font-size: 10px;\r\n  font-weight: 600;\r\n  text-transform: uppercase;\r\n  color: var(--p-primary-500);\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\r\n  border-radius: 3px;\r\n  white-space: nowrap;\n}\n.meta-sep[data-v-9b8dc5c9] {\r\n  color: var(--descrip-text);\r\n  font-size: 11px;\n}\n.model-size[data-v-9b8dc5c9] {\r\n  font-size: 11px;\r\n  color: var(--descrip-text);\r\n  white-space: nowrap;\n}\n.card-path[data-v-9b8dc5c9] {\r\n  font-size: 10px;\r\n  color: var(--descrip-text);\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n  margin-top: 4px;\n}\n.card-detail[data-v-9b8dc5c9] {\r\n  margin-top: 6px;\n}\n.card-error[data-v-9b8dc5c9] {\r\n  font-size: 10px;\r\n  color: var(--error-text);\r\n  display: block;\n}\n.card-status-text[data-v-9b8dc5c9] {\r\n  font-size: 10px;\r\n  color: var(--descrip-text);\n}\n.download-progress[data-v-9b8dc5c9] {\r\n  height: 6px;\r\n  margin-bottom: 4px;\n}\n.progress-text[data-v-9b8dc5c9] {\r\n  font-size: 10px;\r\n  color: var(--descrip-text);\r\n  display: block;\r\n  margin-bottom: 4px;\n}\n.action-btn[data-v-9b8dc5c9] {\r\n  display: inline-block;\r\n  padding: 3px 12px;\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  background: var(--comfy-input-bg);\r\n  color: var(--fg-color);\r\n  margin-top: 4px;\r\n  transition: background 0.15s, border-color 0.15s;\n}\n.action-btn[data-v-9b8dc5c9]:hover {\r\n  background: var(--border-color);\n}\n.download-btn[data-v-9b8dc5c9] {\r\n  color: var(--p-primary-500);\r\n  border-color: var(--p-primary-500);\n}\n.download-btn[data-v-9b8dc5c9]:hover {\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\n}\n.cancel-btn[data-v-9b8dc5c9] {\r\n  color: var(--error-text);\r\n  border-color: var(--error-text);\n}\n.cancel-btn[data-v-9b8dc5c9]:hover {\r\n  background: rgba(220, 38, 38, 0.1);\n}\n.retry-btn[data-v-9b8dc5c9] {\r\n  color: var(--p-primary-500);\r\n  border-color: var(--p-primary-500);\r\n  margin-top: 4px;\n}\n.retry-btn[data-v-9b8dc5c9]:hover {\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\n}\r\n\n.model-list[data-v-8691d8a3] {\r\n  margin-bottom: 16px;\n}\n.section-header[data-v-8691d8a3] {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  margin-bottom: 8px;\n}\n.section-title[data-v-8691d8a3] {\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  color: var(--fg-color);\r\n  margin: 0;\r\n  text-transform: uppercase;\r\n  letter-spacing: 0.5px;\n}\n.summary-text[data-v-8691d8a3] {\r\n  font-size: 11px;\n}\n.summary-text.all-found[data-v-8691d8a3] {\r\n  color: var(--p-green-600);\r\n  font-weight: 600;\n}\n.summary-text.has-missing[data-v-8691d8a3] {\r\n  color: var(--error-text);\r\n  font-weight: 600;\n}\n.cards[data-v-8691d8a3] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\n}\n.batch-actions[data-v-8691d8a3] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  margin-top: 10px;\n}\n.batch-btn[data-v-8691d8a3] {\r\n  display: block;\r\n  width: 100%;\r\n  padding: 6px 12px;\r\n  font-size: 12px;\r\n  font-weight: 600;\r\n  border: 1px solid var(--border-color);\r\n  border-radius: 4px;\r\n  cursor: pointer;\r\n  background: var(--comfy-input-bg);\r\n  color: var(--fg-color);\r\n  transition: background 0.15s, border-color 0.15s;\n}\n.batch-btn[data-v-8691d8a3]:hover:not(:disabled) {\r\n  background: var(--border-color);\n}\n.download-all-btn[data-v-8691d8a3] {\r\n  color: var(--p-primary-500);\r\n  border-color: var(--p-primary-500);\n}\n.download-all-btn[data-v-8691d8a3]:hover {\r\n  background: rgba(var(--p-primary-500-rgb, 59, 130, 246), 0.15);\n}\n.downloading-btn[data-v-8691d8a3] {\r\n  color: var(--descrip-text);\r\n  cursor: default;\r\n  opacity: 0.7;\n}\n.cancel-all-btn[data-v-8691d8a3] {\r\n  color: var(--error-text);\r\n  border-color: var(--error-text);\n}\n.cancel-all-btn[data-v-8691d8a3]:hover {\r\n  background: rgba(220, 38, 38, 0.1);\n}\r\n\n.image-preview[data-v-bb329911] {\r\n  margin-bottom: 12px;\r\n  border-radius: 6px;\r\n  overflow: hidden;\r\n  border: 1px solid var(--border-color);\r\n  max-height: 180px;\r\n  background: var(--comfy-input-bg);\n}\n.image-preview img[data-v-bb329911] {\r\n  display: block;\r\n  width: 100%;\r\n  height: 100%;\r\n  max-height: 180px;\r\n  object-fit: contain;\n}\n.hint-text[data-v-bb329911] {\r\n  color: var(--descrip-text);\r\n  font-size: 12px;\r\n  margin: 0;\r\n  line-height: 1.4;\n}\n.status-box[data-v-bb329911] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  padding: 10px 12px;\r\n  border-radius: 6px;\r\n  font-size: 12px;\r\n  margin-bottom: 12px;\n}\n.loading-box[data-v-bb329911] {\r\n  background: var(--comfy-input-bg);\r\n  border: 1px solid var(--border-color);\r\n  color: var(--descrip-text);\n}\n.error-box[data-v-bb329911] {\r\n  background: rgba(220, 38, 38, 0.1);\r\n  border: 1px solid var(--error-text);\r\n  color: var(--error-text);\n}\n.spinner[data-v-bb329911] {\r\n  width: 14px;\r\n  height: 14px;\r\n  border: 2px solid var(--border-color);\r\n  border-top-color: var(--p-primary-500);\r\n  border-radius: 50%;\r\n  animation: spin-bb329911 0.6s linear infinite;\n}\n@keyframes spin-bb329911 {\nto { transform: rotate(360deg);\n}\n}"));
       document.head.appendChild(elementStyle);
     }
   } catch (e) {
@@ -7738,6 +7738,45 @@ async function resolveModels(metadata) {
   }
   return response.json();
 }
+async function downloadModel(resource) {
+  const response = await window.app.api.fetchApi("/civitai/download", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resource, api_key: getApiKey() })
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || `Download request failed (${response.status})`);
+  }
+  return response.json();
+}
+async function downloadAllMissing(resources) {
+  const missing = resources.filter((r2) => r2.resolved && !r2.already_downloaded);
+  const response = await window.app.api.fetchApi("/civitai/download-all", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resources: missing, api_key: getApiKey() })
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || `Batch download request failed (${response.status})`);
+  }
+  return response.json();
+}
+async function cancelDownload(taskId) {
+  await window.app.api.fetchApi("/civitai/download-cancel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ task_id: taskId })
+  });
+}
+async function cancelAllDownloads() {
+  await window.app.api.fetchApi("/civitai/download-cancel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cancel_all: true })
+  });
+}
 const _hoisted_1$6 = { class: "api-key-warning" };
 const _sfc_main$5 = /* @__PURE__ */ defineComponent({
   __name: "ApiKeyWarning",
@@ -8556,8 +8595,8 @@ const _hoisted_2$2 = { class: "model-status" };
 const _hoisted_3$2 = ["title"];
 const _hoisted_4$2 = { class: "model-meta" };
 const _hoisted_5$2 = { class: "model-type-tag" };
-const _hoisted_6$1 = { class: "model-size" };
-const _hoisted_7$1 = ["title"];
+const _hoisted_6$2 = { class: "model-size" };
+const _hoisted_7$2 = ["title"];
 const _hoisted_8$1 = {
   key: 1,
   class: "card-detail"
@@ -8663,7 +8702,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             createBaseVNode("span", _hoisted_5$2, toDisplayString(__props.resource.type), 1),
             formattedSize.value ? (openBlock(), createElementBlock(Fragment, { key: 0 }, [
               _cache[4] || (_cache[4] = createBaseVNode("span", { class: "meta-sep" }, "·", -1)),
-              createBaseVNode("span", _hoisted_6$1, toDisplayString(formattedSize.value), 1)
+              createBaseVNode("span", _hoisted_6$2, toDisplayString(formattedSize.value), 1)
             ], 64)) : createCommentVNode("", true)
           ])
         ]),
@@ -8671,7 +8710,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
           key: 0,
           class: "card-path",
           title: __props.resource.target_path
-        }, toDisplayString(shortenedPath.value), 9, _hoisted_7$1)) : createCommentVNode("", true),
+        }, toDisplayString(shortenedPath.value), 9, _hoisted_7$2)) : createCommentVNode("", true),
         !__props.resource.already_downloaded && !__props.resource.resolved && !isDownloading.value ? (openBlock(), createElementBlock("div", _hoisted_8$1, [
           createBaseVNode("span", _hoisted_9$1, toDisplayString(__props.resource.error || "Cannot resolve"), 1)
         ])) : createCommentVNode("", true),
@@ -8687,9 +8726,9 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
         __props.resource.downloadStatus === "downloading" ? (openBlock(), createElementBlock("div", _hoisted_12, [
           createVNode(unref(script), {
             value: __props.resource.downloadProgress ?? 0,
-            showValue: (__props.resource.downloadProgress ?? 0) > 10,
+            showValue: false,
             class: "download-progress"
-          }, null, 8, ["value", "showValue"]),
+          }, null, 8, ["value"]),
           createBaseVNode("span", _hoisted_13, toDisplayString(formattedDownloaded.value) + " / " + toDisplayString(formattedTotal.value), 1),
           createBaseVNode("button", {
             class: "action-btn cancel-btn",
@@ -8717,7 +8756,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const ModelCard = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-75a4eecf"]]);
+const ModelCard = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-9b8dc5c9"]]);
 const _hoisted_1$1 = { class: "model-list" };
 const _hoisted_2$1 = { class: "section-header" };
 const _hoisted_3$1 = {
@@ -8729,21 +8768,35 @@ const _hoisted_4$1 = {
   class: "summary-text has-missing"
 };
 const _hoisted_5$1 = { class: "cards" };
+const _hoisted_6$1 = {
+  key: 0,
+  class: "batch-actions"
+};
+const _hoisted_7$1 = {
+  class: "batch-btn downloading-btn",
+  disabled: ""
+};
 const _sfc_main$1 = /* @__PURE__ */ defineComponent({
   __name: "ModelList",
   props: {
-    resources: {}
+    resources: {},
+    batchDownloading: { type: Boolean },
+    batchProgress: {},
+    batchTotal: {}
   },
-  emits: ["download", "cancel", "retry"],
+  emits: ["download", "cancel", "retry", "download-all", "cancel-all"],
   setup(__props) {
     const props = __props;
     const missingCount = computed(
       () => props.resources.filter((r2) => !r2.already_downloaded).length
     );
+    const downloadableCount = computed(
+      () => props.resources.filter((r2) => r2.resolved && !r2.already_downloaded && (!r2.downloadStatus || r2.downloadStatus === "idle" || r2.downloadStatus === "failed" || r2.downloadStatus === "cancelled")).length
+    );
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", _hoisted_1$1, [
         createBaseVNode("div", _hoisted_2$1, [
-          _cache[3] || (_cache[3] = createBaseVNode("h3", { class: "section-title" }, "Models", -1)),
+          _cache[5] || (_cache[5] = createBaseVNode("h3", { class: "section-title" }, "Models", -1)),
           missingCount.value === 0 ? (openBlock(), createElementBlock("span", _hoisted_3$1, "All found")) : (openBlock(), createElementBlock("span", _hoisted_4$1, "Missing: " + toDisplayString(missingCount.value) + " of " + toDisplayString(__props.resources.length), 1))
         ]),
         createBaseVNode("div", _hoisted_5$1, [
@@ -8756,12 +8809,25 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
               onRetry: _cache[2] || (_cache[2] = (r2) => _ctx.$emit("retry", r2))
             }, null, 8, ["resource"]);
           }), 128))
-        ])
+        ]),
+        downloadableCount.value > 0 || __props.batchDownloading ? (openBlock(), createElementBlock("div", _hoisted_6$1, [
+          !__props.batchDownloading ? (openBlock(), createElementBlock("button", {
+            key: 0,
+            class: "batch-btn download-all-btn",
+            onClick: _cache[3] || (_cache[3] = ($event) => _ctx.$emit("download-all"))
+          }, " Download All Missing ")) : (openBlock(), createElementBlock(Fragment, { key: 1 }, [
+            createBaseVNode("button", _hoisted_7$1, " Downloading... (" + toDisplayString(__props.batchProgress) + "/" + toDisplayString(__props.batchTotal) + ") ", 1),
+            createBaseVNode("button", {
+              class: "batch-btn cancel-all-btn",
+              onClick: _cache[4] || (_cache[4] = ($event) => _ctx.$emit("cancel-all"))
+            }, " Cancel All ")
+          ], 64))
+        ])) : createCommentVNode("", true)
       ]);
     };
   }
 });
-const ModelList = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-f57a1591"]]);
+const ModelList = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-8691d8a3"]]);
 const _hoisted_1 = { class: "comfy-vue-side-bar-container flex h-full flex-col" };
 const _hoisted_2 = { class: "comfy-vue-side-bar-header flex flex-col gap-2" };
 const _hoisted_3 = { class: "px-2 2xl:px-4 pb-2" };
@@ -8792,12 +8858,81 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     const error = /* @__PURE__ */ ref("");
     const metadata = /* @__PURE__ */ ref(null);
     const resources = /* @__PURE__ */ ref([]);
+    const batchDownloading = /* @__PURE__ */ ref(false);
+    const batchTaskId = /* @__PURE__ */ ref(null);
+    const batchProgress = /* @__PURE__ */ ref(0);
+    const batchTotal = /* @__PURE__ */ ref(0);
+    function findResourceByFilename(filename) {
+      return resources.value.find((r2) => r2.filename === filename);
+    }
+    function onDownloadProgress(event) {
+      const { task_id, filename, status, progress, downloaded_bytes, total_bytes, error: errorMsg } = event.detail;
+      const resource = findResourceByFilename(filename);
+      if (!resource) return;
+      resource.taskId = task_id;
+      switch (status) {
+        case "downloading":
+          resource.downloadStatus = "downloading";
+          resource.downloadProgress = progress ?? 0;
+          resource.downloadedBytes = downloaded_bytes;
+          resource.totalBytes = total_bytes;
+          resource.downloadError = void 0;
+          break;
+        case "verifying":
+          resource.downloadStatus = "verifying";
+          resource.downloadedBytes = downloaded_bytes;
+          resource.totalBytes = total_bytes;
+          break;
+        case "completed":
+          resource.downloadStatus = void 0;
+          resource.downloadProgress = void 0;
+          resource.downloadedBytes = void 0;
+          resource.totalBytes = void 0;
+          resource.downloadError = void 0;
+          resource.taskId = void 0;
+          resource.already_downloaded = true;
+          if (batchDownloading.value && task_id === batchTaskId.value) {
+            batchProgress.value++;
+          }
+          break;
+        case "failed":
+          resource.downloadStatus = "failed";
+          resource.downloadError = errorMsg || "Download failed";
+          resource.downloadProgress = void 0;
+          resource.downloadedBytes = void 0;
+          resource.totalBytes = void 0;
+          if (batchDownloading.value && task_id === batchTaskId.value) {
+            batchProgress.value++;
+          }
+          break;
+        case "cancelled":
+          resource.downloadStatus = "cancelled";
+          resource.downloadProgress = void 0;
+          resource.downloadedBytes = void 0;
+          resource.totalBytes = void 0;
+          resource.downloadError = void 0;
+          break;
+      }
+      if (batchDownloading.value && task_id === batchTaskId.value) {
+        const batchResources = resources.value.filter(
+          (r2) => r2.downloadStatus === "downloading" || r2.downloadStatus === "verifying" || r2.downloadStatus === "waiting"
+        );
+        if (batchResources.length === 0) {
+          batchDownloading.value = false;
+          batchTaskId.value = null;
+        }
+      }
+    }
     function checkApiKey() {
       apiKeySet.value = !!getApiKey();
     }
     onMounted(() => {
       checkApiKey();
       setInterval(checkApiKey, 2e3);
+      window.app.api.addEventListener("civitai.download.progress", onDownloadProgress);
+    });
+    onUnmounted(() => {
+      window.app.api.removeEventListener("civitai.download.progress", onDownloadProgress);
     });
     async function handleSubmit(input) {
       error.value = "";
@@ -8823,6 +8958,58 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
       } finally {
         loading.value = false;
         loadingStep.value = "";
+      }
+    }
+    async function handleDownload(resource) {
+      resource.downloadStatus = "downloading";
+      resource.downloadProgress = 0;
+      resource.downloadError = void 0;
+      try {
+        const { task_id } = await downloadModel(resource);
+        resource.taskId = task_id;
+      } catch (e2) {
+        resource.downloadStatus = "failed";
+        resource.downloadError = e2.message;
+      }
+    }
+    async function handleDownloadAll() {
+      const missing = resources.value.filter((r2) => r2.resolved && !r2.already_downloaded);
+      if (missing.length === 0) return;
+      for (const r2 of missing) {
+        r2.downloadStatus = "waiting";
+        r2.downloadError = void 0;
+      }
+      batchDownloading.value = true;
+      batchProgress.value = 0;
+      batchTotal.value = missing.length;
+      try {
+        const { task_id } = await downloadAllMissing(resources.value);
+        batchTaskId.value = task_id;
+        for (const r2 of missing) {
+          r2.taskId = task_id;
+        }
+      } catch (e2) {
+        for (const r2 of missing) {
+          r2.downloadStatus = void 0;
+          r2.downloadError = void 0;
+        }
+        batchDownloading.value = false;
+        batchTaskId.value = null;
+        error.value = e2.message;
+      }
+    }
+    async function handleCancel(resource) {
+      if (resource.taskId) {
+        try {
+          await cancelDownload(resource.taskId);
+        } catch {
+        }
+      }
+    }
+    async function handleCancelAll() {
+      try {
+        await cancelAllDownloads();
+      } catch {
       }
     }
     return (_ctx, _cache) => {
@@ -8858,8 +9045,16 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
             createVNode(GenerationInfo, { metadata: metadata.value }, null, 8, ["metadata"]),
             resources.value.length > 0 ? (openBlock(), createBlock(ModelList, {
               key: 1,
-              resources: resources.value
-            }, null, 8, ["resources"])) : createCommentVNode("", true)
+              resources: resources.value,
+              "batch-downloading": batchDownloading.value,
+              "batch-progress": batchProgress.value,
+              "batch-total": batchTotal.value,
+              onDownload: handleDownload,
+              onCancel: handleCancel,
+              onRetry: handleDownload,
+              onDownloadAll: handleDownloadAll,
+              onCancelAll: handleCancelAll
+            }, null, 8, ["resources", "batch-downloading", "batch-progress", "batch-total"])) : createCommentVNode("", true)
           ], 64)) : createCommentVNode("", true),
           !loading.value && !error.value && !metadata.value && apiKeySet.value ? (openBlock(), createElementBlock("p", _hoisted_9, " Paste a Civitai image ID or URL to get started. ")) : createCommentVNode("", true)
         ])
@@ -8867,7 +9062,7 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const App = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-241f85ab"]]);
+const App = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-bb329911"]]);
 let vueApp = null;
 async function init() {
   var _a;
