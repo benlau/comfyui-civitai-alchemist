@@ -14,7 +14,7 @@
 - [x] 實作前端 Workflow 生成與 Canvas 載入
 - [x] 研究 Workflow 節點自動排版方案
 - [x] 實作 Workflow 節點自動排版
-- [ ] 發佈準備（GitHub Actions、版本號、README）
+- [x] 發佈準備（GitHub Actions、版本號、README）
 - [ ] 執行驗收測試
 - [ ] 更新專案文件
 
@@ -322,23 +322,9 @@ ComfyUI 的 `loadApiJson()` 內建的 `arrange()` 無法正確排列節點（所
 
 ---
 
-### 發佈準備（GitHub Actions、版本號、README）
+### 發佈準備（版本號、README）
 
 **實作要點**
-- 建立 `.github/workflows/publish.yml`：
-  - 觸發條件：push tag matching `v*`（例如 `v0.1.0`）
-  - 步驟：
-    1. Checkout code
-    2. Setup Node.js + npm install + npm run build（在 `ui/` 目錄）
-    3. 使用 `comfy-cli` 或 ComfyUI Registry API 發佈
-    4. 或使用官方提供的 `comfy-org/publish-node-action` GitHub Action（如果存在）
-  - 需要 repository secret：`COMFY_REGISTRY_TOKEN`（或類似名稱）
-- 建立 `.github/workflows/ci.yml`（基本 CI）：
-  - 觸發條件：push to main、pull request
-  - 步驟：
-    1. Setup Node.js
-    2. `cd ui && npm install && npm run build`（確認前端建置成功）
-    3. 基本 Python lint（可選：`python -m py_compile civitai_routes.py` 等）
 - 確認 `pyproject.toml` 的 `[tool.comfy]` 區段完整且正確：
   - 已有 `PublisherId`、`DisplayName`、`Icon`、`includes` — 確認值是否需要更新
 - 確認版本號：`version = "0.1.0"`（首次發佈）
@@ -350,16 +336,19 @@ ComfyUI 的 `loadApiJson()` 內建的 `arrange()` 無法正確排列節點（所
   - 新增支援的 workflow 類型說明（txt2img、txt2img-hires）
   - 更新 troubleshooting 區段
 
+**備註**
+- GitHub Actions（`.github/workflows/publish.yml`、`.github/workflows/ci.yml`）暫不建立，待後續需要時再處理
+
 **相關檔案**
-- `.github/workflows/publish.yml` — 新建：Registry 發佈 workflow
-- `.github/workflows/ci.yml` — 新建：CI 建置檢查
 - `pyproject.toml` — 確認 `[tool.comfy]` 設定
 - `README.md` — 更新安裝和使用說明
 
 **完成檢查**
-- `.github/workflows/publish.yml` 和 `ci.yml` 語法正確（使用 `act` 本地測試或 YAML lint）
 - `pyproject.toml` 包含完整的 `[tool.comfy]` 區段
 - `README.md` 包含 ComfyUI Manager 安裝說明和 sidebar 使用教學
+
+**實作備註**
+照預期開發
 
 ---
 

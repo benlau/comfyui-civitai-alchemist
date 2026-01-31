@@ -13,6 +13,8 @@ Works as both a **ComfyUI sidebar extension** and a **standalone CLI tool**.
 - **Image Lookup** — Enter an image ID or full Civitai URL to fetch generation metadata
 - **Generation Info** — View prompt, sampler, steps, CFG, seed, size, clip skip, and image preview
 - **Model Status** — See which models (checkpoint, LoRAs, VAE, embeddings, upscaler) are already downloaded and which are missing
+- **Model Download** — Download missing models directly from the sidebar with real-time progress bars, SHA256 verification, cancel support, and batch download
+- **Workflow Generation** — One-click workflow generation from fetched metadata, automatically loaded onto the ComfyUI canvas with proper node layout
 
 ### CLI Pipeline
 
@@ -36,9 +38,16 @@ Works as both a **ComfyUI sidebar extension** and a **standalone CLI tool**.
 
 ## Installation
 
-### As a ComfyUI Extension (Recommended)
+### Via ComfyUI Manager (Recommended)
 
-1. Clone or download into ComfyUI's `custom_nodes/` directory:
+1. Open ComfyUI Manager in the ComfyUI interface
+2. Search for **Civitai Alchemist**
+3. Click **Install**
+4. Restart ComfyUI
+
+### Manual Installation
+
+1. Clone into ComfyUI's `custom_nodes/` directory:
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -47,7 +56,7 @@ git clone https://github.com/ThePhilosopherStone/comfyui-civitai-alchemist.git
 
 2. Start (or restart) ComfyUI. The Civitai Alchemist tab will appear in the left sidebar.
 
-3. Open ComfyUI Settings (`Ctrl + ,`) and enter your Civitai API key in the **Civitai API Key** field.
+3. Open ComfyUI Settings and enter your Civitai API key in the **Civitai API Key** field.
 
 > **Note:** The pre-built frontend (`js/main.js`) is included in the repository. No Node.js or build step required for end users.
 
@@ -69,10 +78,13 @@ cp .env.example .env
 
 ### ComfyUI Sidebar
 
-1. Click the Civitai Alchemist icon (⚡) in the left sidebar
+1. Click the Civitai Alchemist icon in the left sidebar
 2. Enter a Civitai image ID (e.g. `116872916`) or full URL (e.g. `https://civitai.com/images/116872916`)
 3. Click **Go** (or press Enter) to fetch generation info
 4. View generation parameters and model availability
+5. Click **Download All Missing** to download any missing models (or download individually per model card)
+6. Click **Generate Workflow** to create a ComfyUI workflow and load it onto the canvas
+7. Press **Queue Prompt** to start generating
 
 ### CLI: One-shot (recommended)
 
@@ -129,7 +141,7 @@ Each step produces a JSON file you can inspect:
 ```
 comfyui-civitai-alchemist/
 ├── __init__.py                 # ComfyUI extension entry point
-├── civitai_routes.py           # Backend API routes (POST /civitai/fetch, /civitai/resolve)
+├── civitai_routes.py           # Backend API routes (fetch, resolve, download, generate)
 ├── civitai_utils/              # Shared utilities
 │   ├── civitai_api.py          # Civitai REST API client (with retry/backoff)
 │   └── model_manager.py        # Model download & directory management
@@ -235,9 +247,7 @@ See [CLAUDE.md](CLAUDE.md) for more development details.
 
 ## Not Yet Supported
 
-- Model downloading from sidebar (planned for phase 3)
-- Workflow generation from sidebar (planned for phase 4)
-- img2img / inpainting
+- img2img / inpainting workflows
 - ControlNet
 - Non-standard ComfyUI nodes
 
