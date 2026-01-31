@@ -9,7 +9,7 @@
 
 - [x] 重構 pyproject.toml 與 Pipeline 相容性調整
 - [x] 建立前端 Vue 3 專案與 Sidebar 框架
-- [ ] 實作後端 API Routes 與 Pipeline 重構
+- [x] 實作後端 API Routes 與 Pipeline 重構
 - [ ] 實作前端 API Key 管理與 Image Input 元件
 - [ ] 實作前端 Generation Info 與 Model List 元件
 - [ ] 端對端整合測試與修正
@@ -141,7 +141,25 @@
 - 無效 image ID 回傳 HTTP 404，缺少 api_key 回傳 HTTP 401
 
 **實作備註**
-<!-- 執行過程中填寫重要的技術決策、障礙和需要傳遞的上下文 -->
+- [技術決策] 路由註冊方式從原計畫的 `register_routes(server_instance)` 函式模式改為裝飾器模式（`@server.PromptServer.instance.routes.post(...)`），這是 ComfyUI 社群的標準做法（參考 comfyui-deploy、官方 example_node.py.example）。路由在 import 時透過裝飾器自動註冊。
+- [技術決策] 路由檔案從 `api/routes.py` 移至根目錄 `civitai_routes.py`，與 comfyui-deploy 的 `custom_routes.py` 模式一致。`__init__.py` 用 `from . import civitai_routes` 觸發載入。
+- [技術障礙-根因已確認] `from utils.civitai_api import CivitaiAPI` 在 ComfyUI 環境下失敗。經過多次嘗試與測試，確認根本原因為**模組名稱衝突 + `sys.modules` cache**：
+  1. ComfyUI 自身有 `utils/` package（`ComfyUI/utils/__init__.py`）
+  2. ComfyUI 啟動時先 import 自己的 `utils`，cache 到 `sys.modules['utils']`
+  3. 之後無論用 `sys.path.insert(0, ...)` 或 `sys.path.append()`，Python 都直接用 cached 的 `sys.modules['utils']`（指向 ComfyUI 的 utils），不會重新搜尋 `sys.path`
+  4. ComfyUI 的 `utils/` 裡沒有 `civitai_api` 子模組，所以 `from utils.civitai_api import ...` 報 `No module named 'utils.civitai_api'`
+  5. 已驗證：從 ComfyUI 目錄執行 `import utils` 後，即使 `sys.path.insert(0, extension_root)` 也無法改變 `utils` 的解析結果
+  - 嘗試過的方案：
+    - ❌ `sys.path.insert(0, ...)` — 無效，因為 `sys.modules` cache
+    - ❌ `sys.path.append(...)` — 無效，同上
+    - ❌ `importlib.util.spec_from_file_location()` 載入 `civitai_routes.py` — 可以載入 civitai_routes 本身，但 `resolve_models.py` 內部仍然 `from utils.civitai_api import ...` 會失敗
+    - ❌ 把路由檔放在子目錄 `api/routes.py` 或根目錄 `civitai_routes.py` — 檔案位置不是問題，問題在被載入模組的內部 import
+  - ✅ **採用方案 D**：把 `utils/` 改名為 `civitai_utils/`，避免與 ComfyUI 的 `utils` 衝突。同時更新所有 pipeline 檔案的 import（`fetch_metadata.py`、`resolve_models.py`、`download_models.py`、`reproduce.py`）。CLI 模式驗證正常。
+- [技術決策] `civitai_routes.py` 中用 `sys.path.append(extension_root)` + 直接 import `civitai_utils.*` 和 `pipeline.*`。因為 `civitai_utils` 和 `pipeline` 都是唯一名稱，不會與 ComfyUI 的模組衝突，所以 `sys.path.append` 可以正常運作。
+- [驗證結果] ComfyUI 啟動無 warning，API endpoints 測試通過：
+  - `POST /civitai/fetch` 空 image_id → 400、缺 api_key → 401、無效格式 → 400
+  - `POST /civitai/resolve` 空 resources → 200 `{"resources":[],"resolved_count":0,"unresolved_count":0}`
+- [清理] 刪除舊的 `api/` 目錄（`api/__init__.py`、`api/routes.py`），功能已移至根目錄 `civitai_routes.py`
 
 ---
 

@@ -24,7 +24,7 @@ except ImportError:
 # Add project root to path so we can import utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.civitai_api import CivitaiAPI
+from civitai_utils.civitai_api import CivitaiAPI
 
 
 def parse_image_id(url_or_id: str) -> int:

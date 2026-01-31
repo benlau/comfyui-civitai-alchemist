@@ -22,7 +22,7 @@ except ImportError:
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.model_manager import ModelManager
+from civitai_utils.model_manager import ModelManager
 
 
 def main():

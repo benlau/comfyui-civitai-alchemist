@@ -22,8 +22,8 @@ except ImportError:
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.civitai_api import CivitaiAPI
-from utils.model_manager import ModelManager
+from civitai_utils.civitai_api import CivitaiAPI
+from civitai_utils.model_manager import ModelManager
 
 
 def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> dict:

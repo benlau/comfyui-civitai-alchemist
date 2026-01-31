@@ -26,8 +26,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from pipeline.fetch_metadata import parse_image_id, extract_metadata
 from pipeline.resolve_models import resolve_resource
 from pipeline.generate_workflow import build_workflow, submit_workflow
-from utils.civitai_api import CivitaiAPI
-from utils.model_manager import ModelManager
+from civitai_utils.civitai_api import CivitaiAPI
+from civitai_utils.model_manager import ModelManager
 
 
 def main():
