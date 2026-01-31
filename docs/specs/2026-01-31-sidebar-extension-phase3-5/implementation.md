@@ -15,8 +15,8 @@
 - [x] 研究 Workflow 節點自動排版方案
 - [x] 實作 Workflow 節點自動排版
 - [x] 發佈準備（GitHub Actions、版本號、README）
-- [ ] 執行驗收測試
-- [ ] 更新專案文件
+- [x] 執行驗收測試
+- [x] 更新專案文件
 
 ## 任務細節
 
@@ -365,7 +365,7 @@ ComfyUI 的 `loadApiJson()` 內建的 `arrange()` 無法正確排列節點（所
 - `docs/specs/2026-01-31-sidebar-extension-phase3-5/acceptance-report.md` — 詳細的驗收測試執行報告（執行時生成）
 
 **實作備註**
-<!-- 執行過程中填寫 -->
+使用者自行驗收
 
 ---
 
@@ -390,7 +390,7 @@ ComfyUI 的 `loadApiJson()` 內建的 `arrange()` 無法正確排列節點（所
 - `CLAUDE.md` — AI 助手的專案指引文件
 
 **實作備註**
-<!-- 執行過程中填寫 -->
+照預期開發
 
 ---
 

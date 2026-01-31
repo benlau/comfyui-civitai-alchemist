@@ -6,7 +6,7 @@ This file provides context for AI assistants (like Claude) working on this proje
 
 **ComfyUI Civitai Alchemist** reproduces Civitai images locally via ComfyUI. It works in two modes:
 
-1. **ComfyUI Sidebar Extension** — A sidebar tab in ComfyUI's UI for querying Civitai image metadata and checking model availability, without leaving the ComfyUI interface.
+1. **ComfyUI Sidebar Extension** — A sidebar tab in ComfyUI's UI for the full reproduction workflow: query metadata, check model availability, download missing models, and generate a ComfyUI workflow — all without leaving the ComfyUI interface.
 2. **CLI Pipeline** — A standalone 4-step pipeline that fetches metadata, resolves models, downloads them, and generates a ComfyUI workflow.
 
 ## Environment Information
@@ -90,7 +90,7 @@ Generated images from ComfyUI go to `../ComfyUI/output/`.
 ```
 comfyui-civitai-alchemist/
 ├── __init__.py                 # ComfyUI extension entry point (WEB_DIRECTORY, route registration)
-├── civitai_routes.py           # Backend API routes (POST /civitai/fetch, /civitai/resolve)
+├── civitai_routes.py           # Backend API routes (fetch, resolve, download, generate)
 ├── civitai_utils/              # Shared utilities (renamed from utils/ to avoid ComfyUI conflict)
 │   ├── civitai_api.py          # Civitai REST API client (with retry/backoff)
 │   └── model_manager.py        # Model download & directory management
@@ -112,13 +112,13 @@ comfyui-civitai-alchemist/
 │   │   │   ├── ModelList.vue       # Model list container with summary
 │   │   │   └── ModelCard.vue       # Individual model status card
 │   │   ├── composables/
-│   │   │   └── useCivitaiApi.ts    # API client composable (fetchMetadata, resolveModels)
+│   │   │   └── useCivitaiApi.ts    # API client composable (fetch, resolve, download, generate)
 │   │   └── types/
 │   │       ├── index.ts            # TypeScript type definitions (Metadata, Resource, etc.)
 │   │       └── comfyui.d.ts        # ComfyUI global type declarations (window.app)
 │   ├── package.json
 │   └── vite.config.ts          # Vite library mode config → ../js/
-├── js/                         # Built frontend output (gitignored)
+├── js/                         # Built frontend output (committed for distribution)
 ├── nodes/                      # ComfyUI custom nodes (currently unused)
 ├── scripts/                    # Environment setup scripts (Linux/WSL2)
 │   ├── setup.sh                # One-click environment setup
@@ -142,10 +142,21 @@ comfyui-civitai-alchemist/
 
 ### Backend API Routes (`civitai_routes.py`)
 
+Six POST endpoints, all registered via `@server.PromptServer.instance.routes.post()` decorators (standard ComfyUI pattern):
+
 - `POST /civitai/fetch` — accepts `{ image_id, api_key }`, returns metadata JSON
 - `POST /civitai/resolve` — accepts `{ metadata, api_key }`, returns resources list with `exists` status
-- Routes registered via `@server.PromptServer.instance.routes.post()` decorators (standard ComfyUI pattern)
-- Uses `FolderPathsModelAdapter` to check model existence via ComfyUI's `folder_paths` API (respects `extra_model_paths.yaml` config)
+- `POST /civitai/download` — accepts `{ resource, api_key }`, starts async download, returns `{ task_id }`
+- `POST /civitai/download-all` — accepts `{ resources, api_key }`, downloads sequentially, returns `{ task_id }`
+- `POST /civitai/download-cancel` — accepts `{ task_id }` or `{ cancel_all: true }`, cancels download(s)
+- `POST /civitai/generate` — accepts `{ metadata, resources }`, returns `{ workflow, workflow_type, node_count }`
+
+Key implementation details:
+- Uses `FolderPathsModelAdapter` to check model existence and determine download paths via ComfyUI's `folder_paths` API (respects `extra_model_paths.yaml` config)
+- Downloads use `aiohttp.ClientSession` for non-blocking async HTTP (not `requests`, which would block the event loop)
+- Download progress pushed via WebSocket: `PromptServer.instance.send_sync("civitai.download.progress", payload)` with status values: `downloading`, `verifying`, `completed`, `failed`, `cancelled`
+- Downloads write to `.part` temp files, verify SHA256 hash, then rename to final filename
+- Active downloads tracked in module-level `_active_downloads` dict with cancel support via `asyncio.Event`
 - `civitai_utils/` was renamed from `utils/` to avoid collision with ComfyUI's own `utils` package in `sys.modules`
 
 ### Frontend Architecture (`ui/`)
@@ -153,6 +164,8 @@ comfyui-civitai-alchemist/
 - **Framework**: Vue 3 + TypeScript + PrimeVue, built with Vite in library mode
 - **Entry point** (`main.ts`): Registers sidebar tab and API key setting via `window.app.registerExtension()` and `window.app.extensionManager.registerSidebarTab()`
 - **API communication**: Uses `window.app.api.fetchApi()` (ComfyUI's built-in fetch wrapper); API key read from ComfyUI Settings via `window.app.extensionManager.setting.get()`
+- **WebSocket events**: Listens for `civitai.download.progress` events via `window.app.api.addEventListener()` to update download progress in real-time
+- **Workflow loading**: Uses `window.app.loadApiJson(workflow, filename)` to load generated workflows onto the canvas, followed by manual `computeSize()` + `setSize()` + `graph.arrange()` to fix node layout (ComfyUI's built-in arrange fails without prior size computation)
 - **CSS strategy**: Uses ComfyUI's native CSS variables (`--fg-color`, `--descrip-text`, `--border-color`, `--comfy-input-bg`), NOT PrimeVue tokens (which don't switch with ComfyUI's dark theme)
 - **CSS injection**: `vite-plugin-css-injected-by-js` injects CSS via JS at runtime (ComfyUI only loads `main.js`, not separate CSS files)
 - **Build output**: `js/main.js` (single ES module), loaded by ComfyUI via `WEB_DIRECTORY`
@@ -200,6 +213,23 @@ Generates ComfyUI API-format workflow (JSON DAG):
 - Embeddings: embedding filenames from resources are converted to `embedding:name` syntax in prompts (with fuzzy matching for names with optional spaces, e.g. "lazy pos" → "embedding:lazypos")
 - SaveImage prefix: `civitai_{image_id}`
 
+### Download Mechanism (`civitai_routes.py`)
+
+- Async downloads using `aiohttp.ClientSession` — does not block ComfyUI's event loop
+- Downloads write to `.part` temp file → SHA256 verification → rename to final filename
+- Progress pushed via WebSocket every 500ms max: `PromptServer.instance.send_sync("civitai.download.progress", {...})`
+- Active downloads tracked in `_active_downloads: Dict[str, DownloadTask]` with `asyncio.Event` for cancellation
+- Civitai download URL authenticated via `?token={api_key}` query parameter
+- Batch downloads execute sequentially (one model at a time), with failed models skipped automatically
+- On Windows, `.part` file cleanup happens after the file handle is closed (outside `with open()` block) to avoid file locking issues
+
+### Workflow Canvas Loading
+
+- Frontend uses `window.app.loadApiJson(workflow, filename)` to load API-format workflow
+- After loading, manually runs `computeSize()` + `setSize()` on all nodes, then `graph.arrange()` to fix layout
+- This workaround is needed because `loadApiJson`'s built-in `arrange()` uses default node sizes (before `computeSize` runs), causing all nodes to stack at (10,10)
+- Missing model warning dialog shown before generation if any models are not downloaded
+
 ### Model Manager (`civitai_utils/model_manager.py`)
 
 - `ModelManager(models_dir=)` accepts a models directory path; falls back to `MODELS_DIR` env var, then `../ComfyUI/models`
@@ -210,12 +240,15 @@ Generates ComfyUI API-format workflow (JSON DAG):
 
 ## Supported Scope
 
-### Sidebar Extension (Phase 1–2)
+### Sidebar Extension
 - Sidebar tab registration in ComfyUI UI
 - API key management via ComfyUI Settings
 - Image metadata query (by ID or full Civitai URL)
 - Generation parameter display (prompt, sampler, steps, CFG, seed, size, clip skip, image preview)
 - Model status checking (checkpoint, LoRA, VAE, embedding, upscaler) with local existence detection via `folder_paths`
+- Model downloading with real-time progress bars, SHA256 verification, cancel/retry support, and batch download
+- Workflow generation from fetched metadata, loaded onto canvas with auto-arranged node layout
+- ModelCard supports 7 visual states: already downloaded, missing (resolved), missing (unresolved), downloading, verifying, failed, cancelled
 
 ### CLI Pipeline
 - **txt2img** workflows with optional LoRA(s)
@@ -228,8 +261,6 @@ Generates ComfyUI API-format workflow (JSON DAG):
 
 ## Not Yet Supported
 
-- Model downloading from sidebar (planned for phase 3)
-- Workflow generation from sidebar (planned for phase 4)
 - img2img / inpainting
 - ControlNet
 - Non-standard ComfyUI nodes
