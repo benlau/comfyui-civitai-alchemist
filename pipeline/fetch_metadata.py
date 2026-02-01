@@ -109,6 +109,9 @@ def extract_metadata(image_data: dict) -> dict:
     # Fallback: if no resources from meta.resources, try civitaiResources from raw_meta
     if not resources:
         civitai_resources = meta.get("civitaiResources", [])
+        # Deduplicate by model_version_id: Civitai sometimes includes the same
+        # resource twice — once without type and once with explicit type.
+        seen_version_ids = {}  # model_version_id -> index in resources list
         for cr in civitai_resources:
             cr_type = cr.get("type", "unknown")
             if cr_type in ("checkpoint", "Checkpoint", "model"):
@@ -117,13 +120,29 @@ def extract_metadata(image_data: dict) -> dict:
                 cr_type = "lora"
             elif cr_type in ("upscaler", "Upscaler"):
                 cr_type = "upscaler"
-            resources.append({
+
+            version_id = cr.get("modelVersionId")
+            entry = {
                 "name": cr.get("modelName", "unknown"),
                 "type": cr_type,
                 "weight": cr.get("weight"),
                 "hash": None,
-                "model_version_id": cr.get("modelVersionId"),
-            })
+                "model_version_id": version_id,
+            }
+
+            # If we've seen this version_id before, keep the more informative entry
+            if version_id and version_id in seen_version_ids:
+                existing_idx = seen_version_ids[version_id]
+                existing_entry = resources[existing_idx]
+                if existing_entry["type"] == "unknown" and cr_type != "unknown":
+                    resources[existing_idx] = entry
+                elif existing_entry["name"] in ("unknown", "") and entry["name"] not in ("unknown", ""):
+                    resources[existing_idx] = entry
+                continue
+
+            resources.append(entry)
+            if version_id:
+                seen_version_ids[version_id] = len(resources) - 1
 
     # Detect hires workflow and extract related fields
     workflow_type = meta.get("workflow")
@@ -240,23 +259,36 @@ def _merge_trpc_resources(metadata: dict, trpc_resources: list) -> None:
 
         # Try to match an existing embedded resource
         matched = False
+
+        # Strategy 1: Match by model_version_id (most reliable)
         for res in existing:
-            if res.get("type", "") != trpc_type:
-                continue
-
-            res_name = res.get("name", "")
-            is_unknown = res_name.lower() in ("unknown", "unknown_model", "")
-            names_match = (
-                res_name.lower() in trpc_name.lower()
-                or trpc_name.lower() in res_name.lower()
-            )
-
-            if is_unknown or names_match:
-                res["model_version_id"] = trpc_version_id
-                if is_unknown:
+            if res.get("model_version_id") and res["model_version_id"] == trpc_version_id:
+                if res.get("type") in ("unknown", ""):
+                    res["type"] = trpc_type
+                if res.get("name", "").lower() in ("unknown", "unknown_model", ""):
                     res["name"] = trpc_name
                 matched = True
                 break
+
+        # Strategy 2: Match by type + name (fallback for entries without version id)
+        if not matched:
+            for res in existing:
+                if res.get("type", "") != trpc_type:
+                    continue
+
+                res_name = res.get("name", "")
+                is_unknown = res_name.lower() in ("unknown", "unknown_model", "")
+                names_match = (
+                    res_name.lower() in trpc_name.lower()
+                    or trpc_name.lower() in res_name.lower()
+                )
+
+                if is_unknown or names_match:
+                    res["model_version_id"] = trpc_version_id
+                    if is_unknown:
+                        res["name"] = trpc_name
+                    matched = True
+                    break
 
         if not matched:
             existing.append({
