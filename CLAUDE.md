@@ -62,11 +62,8 @@ Civitai API returns nested `meta.meta` — the outer `meta` has an `id`, the inn
 
 ## Known Issues
 
-1. **Flash Attention**: May crash on RTX 5090 — SageAttention is used instead
-2. **WSL2**: Project must be in WSL2 filesystem (`/home/...`), not `/mnt/c/`
-3. **Python 3.13**: Not supported; use 3.12
-4. **Windows**: `triton` and `sageattention` are Linux-only; ComfyUI runs fine without them
-5. **Windows junctions**: Use `New-Item -ItemType Junction` (PowerShell) instead of `ln -s`. Junctions do not require admin privileges
+1. **Python 3.13**: Not supported; use 3.12
+2. **Windows junctions**: Use `New-Item -ItemType Junction` (PowerShell) instead of `ln -s`. Junctions do not require admin privileges
 
 ## Tested Images
 
