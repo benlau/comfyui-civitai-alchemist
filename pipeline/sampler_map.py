@@ -7,6 +7,10 @@ Civitai embeds both sampler and scheduler in a single string (e.g. "DPM++ 2M Kar
 while ComfyUI separates them into sampler_name and scheduler.
 """
 
+import logging
+
+logger = logging.getLogger("civitai_alchemist.workflow")
+
 # Civitai sampler name -> ComfyUI sampler name
 # Note: scheduler suffixes ("Karras", "Exponential") are stripped before lookup
 SAMPLER_MAP = {
@@ -86,6 +90,7 @@ def map_sampler(civitai_sampler: str, schedule_type: str = None) -> tuple[str, s
                 break
 
     if comfyui_sampler is None:
+        logger.debug("Unknown sampler '%s', falling back to 'euler'", civitai_sampler)
         print(f"Warning: Unknown sampler '{civitai_sampler}', falling back to 'euler'")
         comfyui_sampler = "euler"
 

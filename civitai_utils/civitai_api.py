@@ -7,9 +7,13 @@ API Documentation: https://github.com/civitai/civitai/wiki/REST-API-Reference
 """
 
 import json
+import logging
 import time
+import traceback
 import requests
 from typing import Dict, List, Optional
+
+logger = logging.getLogger("civitai_alchemist.api")
 
 
 class CivitaiAPI:
@@ -19,14 +23,17 @@ class CivitaiAPI:
 
     BASE_URL = "https://civitai.com/api/v1"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None,
+                 api_log: Optional[list] = None):
         """
         Initialize Civitai API client.
 
         Args:
             api_key: Civitai API key (optional, required for some endpoints)
+            api_log: Optional list to record raw API call details (for debug mode)
         """
         self.api_key = api_key
+        self.api_log = api_log
         self.session = requests.Session()
         if api_key:
             self.session.headers.update({"Authorization": f"Bearer {api_key}"})
@@ -41,23 +48,54 @@ class CivitaiAPI:
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                start = time.monotonic()
                 response = self.session.request(method, url, timeout=30, **kwargs)
+                elapsed_ms = round((time.monotonic() - start) * 1000)
 
                 if response.status_code == 429:
                     retry_after = int(response.headers.get("Retry-After", 5))
                     print(f"  Rate limited, waiting {retry_after}s...")
+                    logger.warning("Rate limited, waiting %ds...", retry_after)
                     time.sleep(retry_after)
                     continue
 
                 response.raise_for_status()
+
+                # Record to api_log if enabled (debug mode)
+                if self.api_log is not None:
+                    try:
+                        body = response.json()
+                    except Exception:
+                        body = "(non-JSON response)"
+                    self.api_log.append({
+                        "method": method,
+                        "url": str(response.url),
+                        "status_code": response.status_code,
+                        "elapsed_ms": elapsed_ms,
+                        "response_size_bytes": len(response.content),
+                        "response_body": body,
+                    })
+                    logger.debug("API %s %s -> %d (%dms)",
+                                 method, url, response.status_code, elapsed_ms)
+
                 return response
 
             except requests.exceptions.RequestException as e:
                 if attempt < max_retries - 1:
                     wait = 2 ** attempt
                     print(f"  Request failed ({e}), retrying in {wait}s...")
+                    logger.warning("Request failed (%s), retrying in %ds...", e, wait)
                     time.sleep(wait)
                 else:
+                    # Record failed request to api_log
+                    if self.api_log is not None:
+                        self.api_log.append({
+                            "method": method,
+                            "url": url,
+                            "status_code": None,
+                            "error": str(e),
+                            "traceback": traceback.format_exc(),
+                        })
                     raise
 
     def get_image_metadata(self, image_id: int) -> Optional[Dict]:

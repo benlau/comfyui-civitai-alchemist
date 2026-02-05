@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import json
+import logging
 import random
 import re
 import sys
@@ -20,8 +21,11 @@ from urllib import request as urllib_request
 
 from pipeline.sampler_map import map_sampler
 
+logger = logging.getLogger("civitai_alchemist.workflow")
 
-def build_workflow(metadata: dict, resources: dict) -> dict:
+
+def build_workflow(metadata: dict, resources: dict,
+                   debug_data: dict = None) -> dict:
     """
     Build a ComfyUI API-format workflow from metadata and resources.
 
@@ -30,17 +34,19 @@ def build_workflow(metadata: dict, resources: dict) -> dict:
     Args:
         metadata: Image metadata from fetch_metadata
         resources: Resolved resources from resolve_models
+        debug_data: Optional dict to record workflow generation decisions (for debug mode)
 
     Returns:
         ComfyUI workflow dictionary (API format)
     """
     workflow_type = metadata.get("workflow_type", "")
     if workflow_type and "hires" in str(workflow_type).lower():
-        return _build_hires_workflow(metadata, resources)
-    return _build_txt2img_workflow(metadata, resources)
+        return _build_hires_workflow(metadata, resources, debug_data)
+    return _build_txt2img_workflow(metadata, resources, debug_data)
 
 
-def _extract_common_params(metadata: dict, resources: dict) -> dict:
+def _extract_common_params(metadata: dict, resources: dict,
+                           debug_data: dict = None) -> dict:
     """
     Extract common parameters shared by all workflow builders.
 
@@ -63,6 +69,17 @@ def _extract_common_params(metadata: dict, resources: dict) -> dict:
     civitai_sampler = metadata.get("sampler", "Euler")
     schedule_type = metadata.get("raw_meta", {}).get("Schedule type")
     sampler_name, scheduler = map_sampler(civitai_sampler, schedule_type)
+
+    if debug_data is not None:
+        debug_data["sampler_mapping"] = {
+            "input": civitai_sampler,
+            "schedule_type": schedule_type,
+            "output_sampler": sampler_name,
+            "output_scheduler": scheduler,
+        }
+        debug_data["workflow_type"] = metadata.get("workflow_type", "txt2img")
+        logger.debug("Sampler mapping: '%s' -> (%s, %s)",
+                     civitai_sampler, sampler_name, scheduler)
 
     # Find resources from resolved list
     resource_list = resources.get("resources", [])
@@ -197,11 +214,12 @@ def _build_common_nodes(workflow: dict, params: dict) -> tuple:
     return model_source, clip_source, vae_source
 
 
-def _build_txt2img_workflow(metadata: dict, resources: dict) -> dict:
+def _build_txt2img_workflow(metadata: dict, resources: dict,
+                            debug_data: dict = None) -> dict:
     """
     Build a standard txt2img ComfyUI workflow with optional LoRA(s).
     """
-    params = _extract_common_params(metadata, resources)
+    params = _extract_common_params(metadata, resources, debug_data)
     width = metadata.get("size", {}).get("width", 512)
     height = metadata.get("size", {}).get("height", 512)
 
@@ -275,7 +293,8 @@ def _build_txt2img_workflow(metadata: dict, resources: dict) -> dict:
     return workflow
 
 
-def _build_hires_workflow(metadata: dict, resources: dict) -> dict:
+def _build_hires_workflow(metadata: dict, resources: dict,
+                          debug_data: dict = None) -> dict:
     """
     Build a hires fix (txt2img-hires) ComfyUI workflow.
 
@@ -286,7 +305,7 @@ def _build_hires_workflow(metadata: dict, resources: dict) -> dict:
 
     Falls back to LatentUpscale if no upscaler model is available.
     """
-    params = _extract_common_params(metadata, resources)
+    params = _extract_common_params(metadata, resources, debug_data)
     hires_denoise = metadata.get("denoise") or 0.4
 
     base_size = metadata.get("base_size", metadata.get("size", {}))

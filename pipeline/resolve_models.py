@@ -11,9 +11,12 @@ Usage:
 
 import argparse
 import json
+import logging
 import os
 import sys
 from pathlib import Path
+
+logger = logging.getLogger("civitai_alchemist.resolve")
 
 try:
     from dotenv import load_dotenv
@@ -26,7 +29,8 @@ from civitai_utils.civitai_api import CivitaiAPI
 from civitai_utils.model_manager import ModelManager
 
 
-def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> dict:
+def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager,
+                     debug_data: dict = None) -> dict:
     """
     Resolve a single resource to its download information.
 
@@ -40,6 +44,7 @@ def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> 
                   and usually model_version_id from tRPC)
         api: CivitaiAPI instance
         manager: ModelManager instance
+        debug_data: Optional dict to record strategy attempts (for debug mode)
 
     Returns:
         Resolved resource dict with download info
@@ -59,6 +64,8 @@ def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> 
         "error": None,
     }
 
+    strategies_attempted = []
+
     model_type = resource.get("type", "checkpoint")
     result["target_dir"] = ModelManager.TYPE_MAPPING.get(model_type, model_type)
 
@@ -69,8 +76,28 @@ def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> 
         try:
             version_data = api.get_model_version(version_id)
             if version_data:
+                strategies_attempted.append({
+                    "method": "version_id",
+                    "version_id": version_id,
+                    "status": "success",
+                })
+                logger.debug("[%s] Resolved via version_id=%d", resource.get("name"), version_id)
+                if debug_data is not None:
+                    debug_data["strategies_attempted"] = strategies_attempted
                 return _fill_from_version_data(result, version_data, manager, "version_id")
+            else:
+                strategies_attempted.append({
+                    "method": "version_id",
+                    "version_id": version_id,
+                    "status": "not_found",
+                })
         except Exception as e:
+            strategies_attempted.append({
+                "method": "version_id",
+                "version_id": version_id,
+                "status": "error",
+                "error": str(e),
+            })
             print(f"  Version ID lookup failed: {e}")
 
     # Strategy 1: Look up by hash
@@ -80,8 +107,28 @@ def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> 
         try:
             version_data = api.get_model_version_by_hash(file_hash)
             if version_data:
+                strategies_attempted.append({
+                    "method": "hash",
+                    "hash": file_hash,
+                    "status": "success",
+                })
+                logger.debug("[%s] Resolved via hash=%s", resource.get("name"), file_hash)
+                if debug_data is not None:
+                    debug_data["strategies_attempted"] = strategies_attempted
                 return _fill_from_version_data(result, version_data, manager, "hash")
+            else:
+                strategies_attempted.append({
+                    "method": "hash",
+                    "hash": file_hash,
+                    "status": "not_found",
+                })
         except Exception as e:
+            strategies_attempted.append({
+                "method": "hash",
+                "hash": file_hash,
+                "status": "error",
+                "error": str(e),
+            })
             print(f"  Hash lookup failed: {e}")
 
     # Strategy 2: Search by name
@@ -96,13 +143,38 @@ def resolve_resource(resource: dict, api: CivitaiAPI, manager: ModelManager) -> 
                 if name.lower() in model_name.lower() or model_name.lower() in name.lower():
                     versions = model.get("modelVersions", [])
                     if versions:
+                        strategies_attempted.append({
+                            "method": "name_search",
+                            "query": name,
+                            "matched_model": model_name,
+                            "status": "success",
+                        })
+                        logger.debug("[%s] Resolved via name_search, matched '%s'",
+                                     resource.get("name"), model_name)
+                        if debug_data is not None:
+                            debug_data["strategies_attempted"] = strategies_attempted
                         return _fill_from_version_data(
                             result, versions[0], manager, "name_search",
                             model_id=model.get("id"),
                             model_type_override=model.get("type"),
                         )
+            strategies_attempted.append({
+                "method": "name_search",
+                "query": name,
+                "status": "no_match",
+                "candidates": [m.get("name", "") for m in models[:5]],
+            })
         except Exception as e:
+            strategies_attempted.append({
+                "method": "name_search",
+                "query": name,
+                "status": "error",
+                "error": str(e),
+            })
             print(f"  Name search failed: {e}")
+
+    if debug_data is not None:
+        debug_data["strategies_attempted"] = strategies_attempted
 
     result["error"] = "Could not resolve resource"
     return result

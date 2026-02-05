@@ -11,10 +11,13 @@ Usage:
 
 import argparse
 import json
+import logging
 import os
 import re
 import sys
 from pathlib import Path
+
+logger = logging.getLogger("civitai_alchemist.fetch")
 
 try:
     from dotenv import load_dotenv
@@ -126,7 +129,7 @@ def extract_metadata(image_data: dict) -> dict:
     }
 
 
-def enrich_metadata(metadata: dict, api) -> dict:
+def enrich_metadata(metadata: dict, api, debug_data: dict = None) -> dict:
     """
     Populate metadata resources from Civitai's tRPC endpoint (primary source).
 
@@ -143,6 +146,7 @@ def enrich_metadata(metadata: dict, api) -> dict:
     Args:
         metadata: Metadata dict from extract_metadata()
         api: CivitaiAPI instance (must be authenticated)
+        debug_data: Optional dict to record enrichment decisions (for debug mode)
 
     Returns:
         Enriched metadata dict (modified in place and returned)
@@ -151,18 +155,27 @@ def enrich_metadata(metadata: dict, api) -> dict:
     if not image_id:
         return metadata
 
+    enrichment_source = None
+    fallback_attempted = False
+
     # Try tRPC as primary source
     resources = _resources_from_trpc(metadata, api)
 
-    # Fallback to civitaiResources if tRPC returned nothing
-    if not resources:
+    if resources:
+        enrichment_source = "trpc"
+    else:
+        fallback_attempted = True
+
+        # Fallback to civitaiResources if tRPC returned nothing
         raw_meta = metadata.get("raw_meta", {})
         resources = _resources_from_civitai_resources(raw_meta)
 
-    # Fallback to meta.resources if civitaiResources also empty
-    if not resources:
-        raw_meta = metadata.get("raw_meta", {})
-        resources = _resources_from_meta_resources(raw_meta)
+        if resources:
+            enrichment_source = "civitaiResources"
+        else:
+            # Fallback to meta.resources if civitaiResources also empty
+            resources = _resources_from_meta_resources(raw_meta)
+            enrichment_source = "meta_resources" if resources else "none"
 
     metadata["resources"] = resources
 
@@ -172,6 +185,16 @@ def enrich_metadata(metadata: dict, api) -> dict:
             if r.get("type") == "checkpoint" and r.get("name"):
                 metadata["model_name"] = r["name"]
                 break
+
+    logger.debug("Enrichment source: %s, fallback_attempted: %s, resources: %d",
+                 enrichment_source, fallback_attempted, len(resources))
+
+    if debug_data is not None:
+        debug_data["enrichment"] = {
+            "source": enrichment_source,
+            "fallback_attempted": fallback_attempted,
+        }
+        debug_data["resource_count"] = len(resources)
 
     return metadata
 
