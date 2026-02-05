@@ -54,6 +54,9 @@ URL → fetch_metadata → metadata.json
 
 # Skip download (models already exist)
 .venv/bin/python -m pipeline.reproduce https://civitai.com/images/XXXXX --skip-download
+
+# Debug mode: run pipeline without downloading/submitting, save diagnostic report
+.venv/bin/python -m pipeline.reproduce https://civitai.com/images/XXXXX --debug
 ```
 
 ### Step by step (for debugging)
@@ -82,6 +85,8 @@ All pipeline output goes to `output/` (gitignored):
 - `output/metadata.json` — image generation parameters
 - `output/resources.json` — resolved model download info
 - `output/workflow.json` — ComfyUI API-format workflow
+- `output/debug_report.json` — compact debug summary (~8KB, for AI/human review; `--debug` only)
+- `output/debug_report_full.json` — complete debug data with raw API responses (~300KB+; `--debug` only)
 
 Generated images from ComfyUI go to `../ComfyUI/output/`.
 
@@ -100,7 +105,8 @@ comfyui-civitai-alchemist/
 │   ├── download_models.py      # Step 3: download model files
 │   ├── generate_workflow.py    # Step 4: generate workflow.json
 │   ├── sampler_map.py          # Civitai ↔ ComfyUI sampler name mapping
-│   └── reproduce.py            # One-shot runner (all steps)
+│   ├── reproduce.py            # One-shot runner (all steps)
+│   └── debug.py                # Debug report utilities (--debug mode)
 ├── ui/                         # Frontend source (Vue 3 + TypeScript + PrimeVue)
 │   ├── src/
 │   │   ├── main.ts             # Extension entry: sidebar tab & settings registration
@@ -229,6 +235,17 @@ Generates ComfyUI API-format workflow (JSON DAG):
 - After loading, manually runs `computeSize()` + `setSize()` on all nodes, then `graph.arrange()` to fix layout
 - This workaround is needed because `loadApiJson`'s built-in `arrange()` uses default node sizes (before `computeSize` runs), causing all nodes to stack at (10,10)
 - Missing model warning dialog shown before generation if any models are not downloaded
+
+### Debug Mode (`pipeline/debug.py`)
+
+The `--debug` flag on `reproduce.py` runs the pipeline (fetch → resolve → generate) without downloading or submitting, while capturing all intermediate data for diagnosis:
+
+- **Two-tier reports**: `debug_report.json` (compact summary ~8KB) and `debug_report_full.json` (complete data ~300KB+)
+- **Summary stripping**: `_build_summary()` removes `response_body` from API calls, `raw_image_data` from fetch step, and `comfy` field from `raw_meta` (embedded ComfyUI workflow JSON string)
+- **API call logging**: `CivitaiAPI` accepts optional `api_log: list` param; `_request()` appends method, url, status_code, elapsed_ms, response_size_bytes, and response_body for each call
+- **Decision recording**: Pipeline functions accept optional `debug_data: dict` param to record enrichment source, resolve strategies, sampler mapping, and workflow type
+- **Backward compatibility**: All debug params default to `None`; `pipeline/debug.py` is only imported when `--debug` is active (lazy import)
+- **Error handling**: Partial debug report is saved before `sys.exit(1)` on any pipeline error
 
 ### Model Manager (`civitai_utils/model_manager.py`)
 

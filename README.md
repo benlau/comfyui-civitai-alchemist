@@ -97,6 +97,11 @@ cp .env.example .env
 
 # Skip download (models already exist)
 .venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916 --skip-download
+
+# Debug mode: run pipeline without downloading/submitting, save diagnostic report
+.venv/bin/python -m pipeline.reproduce https://civitai.com/images/116872916 --debug
+# → output/debug_report.json (compact summary for quick review)
+# → output/debug_report_full.json (complete data with raw API responses)
 ```
 
 ### CLI: Step by step (for debugging)
@@ -133,6 +138,7 @@ Each step produces a JSON file you can inspect:
 | `--submit` | Submit the generated workflow to a running ComfyUI instance |
 | `--comfyui-url URL` | ComfyUI server URL (default: `http://127.0.0.1:8188`) |
 | `--skip-download` | Skip model download step |
+| `--debug` | Enable debug mode: verbose logging, save diagnostic reports, skip download and submit |
 | `--output-dir DIR` | Output directory for JSON files (default: `output`) |
 | `--api-key KEY` | Civitai API key (or set `CIVITAI_API_KEY` in `.env`) |
 
@@ -151,7 +157,8 @@ comfyui-civitai-alchemist/
 │   ├── download_models.py      # Step 3: download model files
 │   ├── generate_workflow.py    # Step 4: generate workflow.json
 │   ├── sampler_map.py          # Civitai ↔ ComfyUI sampler name mapping
-│   └── reproduce.py            # One-shot runner (all steps)
+│   ├── reproduce.py            # One-shot runner (all steps)
+│   └── debug.py                # Debug report utilities (--debug mode)
 ├── ui/                         # Frontend source (Vue 3 + TypeScript)
 │   ├── src/
 │   │   ├── main.ts             # Extension entry: sidebar & settings registration
